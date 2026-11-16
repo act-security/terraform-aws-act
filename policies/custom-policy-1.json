@@ -1,0 +1,200 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectRetention",
+        "s3:GetObjectAttributes"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:${partition}:s3:::${cloudtrail_bucket_name}/AWSLogs/*",
+        "arn:${partition}:s3:::${cloudtrail_bucket_name}/*/AWSLogs/*"
+      ],
+      "Sid": "ActSecurityS3AWSLogsGetObject"
+    },
+    {
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "AWSLogs/*",
+            "*/AWSLogs/*"
+          ]
+        }
+      },
+      "Effect": "Allow",
+      "Resource": [
+        "arn:${partition}:s3:::${cloudtrail_bucket_name}"
+      ],
+      "Sid": "ActSecurityS3AWSLogsListBucket"
+    },
+    {
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": [
+            "s3.*.amazonaws.com"
+          ]
+        }
+      },
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:kms:*:*:key/*"
+      ],
+      "Sid": "ActSecurityS3KMSDecrypt"
+    },
+    {
+      "Action": [
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:GetQueryResults"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:*",
+        "arn:aws:logs:*:*:log-group:*:*"
+      ],
+      "Sid": "ActSecurityCloudWatchLogsReadAccess"
+    },
+    {
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": [
+            "logs.*.amazonaws.com"
+          ]
+        }
+      },
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:kms:*:*:key/*"
+      ],
+      "Sid": "ActSecurityCloudWatchKMSDecrypt"
+    },
+    {
+      "Action": [
+        "s3express:ListAccessPointsForDirectoryBuckets",
+        "s3express:GetAccessPoint",
+        "s3express:GetAccessPointPolicy",
+        "s3express:GetAccessPointScope",
+        "s3express:ListTagsForResource"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityS3ExpressAccessPointPolicyRead"
+    },
+    {
+      "Action": [
+        "lambda:GetFunction",
+        "lambda:GetLayerVersion",
+        "lambda:GetNetworkConnector",
+        "lambda:GetMicrovm",
+        "eks:DescribeClusterVersions",
+        "eks:ListPodIdentityAssociations",
+        "eks:DescribePodIdentityAssociation",
+        "eks:ListIdentityProviderConfigs"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityExtendedComputeViewAccess"
+    },
+    {
+      "Action": [
+        "dynamodb:GetResourcePolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityDynamoDBPolicyAccess"
+    },
+    {
+      "Action": [
+        "ssm:GetResourcePolicies"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecuritySsmParameterPolicyRead"
+    },
+    {
+      "Action": [
+        "kinesis:GetResourcePolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:${partition}:kinesis:*:${account_id}:stream/*",
+      "Sid": "ActSecurityKinesisGetResourcePolicy"
+    },
+    {
+      "Action": "eks:DescribeAccessEntry",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityEKSDescribeAccessEntry"
+    },
+    {
+      "Action": [
+        "organizations:DescribeOrganization",
+        "organizations:DescribeEffectivePolicy",
+        "organizations:ListRoots",
+        "organizations:ListOrganizationalUnitsForParent",
+        "organizations:ListAccountsForParent",
+        "organizations:ListPolicies",
+        "organizations:DescribePolicy",
+        "organizations:ListPoliciesForTarget",
+        "organizations:ListTargetsForPolicy",
+        "organizations:ListTagsForResource"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityOrganizationsReadPolicies"
+    },
+    {
+      "Action": [
+        "kafka-cluster:Connect",
+        "kafka-cluster:DescribeTopic",
+        "kafka-cluster:DescribeCluster",
+        "kafka:GetBootstrapBrokers"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityKafkaAccess"
+    },
+    {
+      "Action": [
+        "bedrock:GetAgent",
+        "bedrock:GetAgentActionGroup",
+        "bedrock:GetAgentVersion",
+        "bedrock:GetAgentCollaborator",
+        "bedrock:GetKnowledgeBase",
+        "bedrock:GetDataSource",
+        "bedrock:GetFlow",
+        "bedrock:GetFlowVersion",
+        "bedrock:GetPrompt",
+        "bedrock:GetGuardrail",
+        "bedrock:GetEvaluationJob",
+        "bedrock:ListAutomatedReasoningPolicies",
+        "bedrock:GetAutomatedReasoningPolicy",
+        "bedrock:ListPromptRouters",
+        "bedrock:GetPromptRouter",
+        "bedrock:ListBlueprints",
+        "bedrock:GetBlueprint",
+        "bedrock:ListDataAutomationProjects",
+        "bedrock:GetDataAutomationProject",
+        "bedrock:ListDataAutomationLibraries",
+        "bedrock:GetDataAutomationLibrary",
+        "bedrock:GetResourcePolicy",
+        "bedrock:GetAgentMemory",
+        "bedrock:ListEnforcedGuardrailsConfiguration"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "BedrockSecurityAuditComplete"
+    }
+  ],
+  "Version": "2012-10-17"
+}
