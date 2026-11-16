@@ -113,8 +113,13 @@ run "renders_member_policies_per_account" {
   }
 
   assert {
-    condition     = jsondecode(aws_cloudformation_stack_set.members.template_body).Resources.ActSecurityRole.Properties.AssumeRolePolicyDocument.Statement[0].Condition.StringEquals["sts:ExternalId"] == "act-external-id"
-    error_message = "Member roles must require the external ID."
+    condition     = jsondecode(aws_cloudformation_stack_set.members.template_body).Resources.ActSecurityRole.Properties.AssumeRolePolicyDocument.Statement[0].Condition.StringEquals["sts:ExternalId"] == { Ref = "ExternalId" }
+    error_message = "Member roles must require the external ID from the StackSet parameter."
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_set.members.parameters == tomap({ ExternalId = "act-external-id", ActSecurityConnectorId = "5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d" })
+    error_message = "Act verifies the StackSet by its ExternalId and ActSecurityConnectorId parameters."
   }
 
   assert {

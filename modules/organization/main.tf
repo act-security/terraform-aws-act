@@ -49,7 +49,11 @@ resource "aws_cloudformation_stack_set" "members" {
   call_as          = var.call_as
   capabilities     = ["CAPABILITY_NAMED_IAM"]
   template_body    = jsonencode(local.member_template)
-  tags             = merge(var.tags, { DeploymentVersion = module.member_permissions.deployment_version })
+  parameters = {
+    ExternalId             = var.external_id
+    ActSecurityConnectorId = var.deployment_id
+  }
+  tags = merge(var.tags, { DeploymentVersion = module.member_permissions.deployment_version })
 
   auto_deployment {
     enabled                          = true

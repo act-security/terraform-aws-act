@@ -13,10 +13,20 @@ locals {
   }
 
   member_role_properties = {
-    RoleName                 = local.member_role_name
-    Path                     = var.member_role_path
-    Description              = "Read-only role Act assumes with an external ID"
-    AssumeRolePolicyDocument = jsondecode(module.role.trust_policy)
+    RoleName    = local.member_role_name
+    Path        = var.member_role_path
+    Description = "Read-only role Act assumes with an external ID"
+    AssumeRolePolicyDocument = {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect    = "Allow"
+          Action    = "sts:AssumeRole"
+          Principal = { AWS = concat([var.act_principal_arn], var.deprecated_principal_arns) }
+          Condition = { StringEquals = { "sts:ExternalId" = { Ref = "ExternalId" } } }
+        },
+      ]
+    }
     ManagedPolicyArns = concat(
       module.member_permissions.managed_policy_arns,
       [for resource in keys(local.member_policy_resources) : { Ref = resource }],
@@ -32,6 +42,16 @@ locals {
   member_template = {
     AWSTemplateFormatVersion = "2010-09-09"
     Description              = "Act read-only role for an AWS organization member account"
+    Parameters = {
+      ExternalId = {
+        Type        = "String"
+        Description = "The external ID the role's trust policy requires."
+      }
+      ActSecurityConnectorId = {
+        Type        = "String"
+        Description = "The Act deployment this StackSet belongs to."
+      }
+    }
     Resources = merge(local.member_policy_resources, {
       (local.member_role_resource) = {
         Type       = "AWS::IAM::Role"
