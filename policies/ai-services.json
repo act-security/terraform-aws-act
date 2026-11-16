@@ -1,0 +1,84 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "bedrock:GetAgent",
+        "bedrock:GetAgentActionGroup",
+        "bedrock:GetAgentVersion",
+        "bedrock:GetAgentCollaborator",
+        "bedrock:GetKnowledgeBase",
+        "bedrock:GetDataSource",
+        "bedrock:GetFlow",
+        "bedrock:GetFlowVersion",
+        "bedrock:GetPrompt",
+        "bedrock:GetGuardrail",
+        "bedrock:GetEvaluationJob",
+        "bedrock:ListAutomatedReasoningPolicies",
+        "bedrock:GetAutomatedReasoningPolicy",
+        "bedrock:ListPromptRouters",
+        "bedrock:GetPromptRouter",
+        "bedrock:ListBlueprints",
+        "bedrock:GetBlueprint",
+        "bedrock:ListDataAutomationProjects",
+        "bedrock:GetDataAutomationProject",
+        "bedrock:ListDataAutomationLibraries",
+        "bedrock:GetDataAutomationLibrary",
+        "bedrock:GetResourcePolicy",
+        "bedrock:GetAgentMemory",
+        "bedrock:ListEnforcedGuardrailsConfiguration"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "BedrockSecurityAuditComplete"
+    },
+    {
+      "Action": [
+        "aoss:ListCollections",
+        "aoss:BatchGetCollection",
+        "aoss:GetAccessPolicy",
+        "aoss:GetSecurityPolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "OpenSearchServerlessForKBVectorStores"
+    },
+    {
+      "Action": [
+        "bedrock-agentcore:ListApiKeyCredentialProviders",
+        "bedrock-agentcore:GetApiKeyCredentialProvider",
+        "bedrock-agentcore:ListOauth2CredentialProviders",
+        "bedrock-agentcore:GetOauth2CredentialProvider",
+        "bedrock-agentcore:ListPaymentCredentialProviders",
+        "bedrock-agentcore:GetPaymentCredentialProvider",
+        "bedrock-agentcore:ListPaymentConnectors",
+        "bedrock-agentcore:GetPaymentConnector",
+        "bedrock-agentcore:ListPaymentManagers",
+        "bedrock-agentcore:GetPaymentManager",
+        "bedrock-agentcore:GetTokenVault",
+        "bedrock-agentcore:ListWorkloadIdentities",
+        "bedrock-agentcore:GetWorkloadIdentity",
+        "bedrock-agentcore:ListEvaluators",
+        "bedrock-agentcore:GetEvaluator",
+        "bedrock-agentcore:ListOnlineEvaluationConfigs",
+        "bedrock-agentcore:GetOnlineEvaluationConfig",
+        "bedrock-agentcore:ListDatasets",
+        "bedrock-agentcore:ListMemories",
+        "bedrock-agentcore:GetMemory",
+        "bedrock-agentcore:GetResourcePolicy",
+        "bedrock-agentcore:ListTagsForResource"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityBedrockAgentcoreRead"
+    },
+    {
+      "Action": [
+        "sagemaker:GetModelPackageGroupPolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:sagemaker:*:*:model-package-group/*",
+      "Sid": "ActSecuritySageMakerModelPackageGroupPolicyRead"
+    }
+  ],
+  "Version": "2012-10-17"
+}

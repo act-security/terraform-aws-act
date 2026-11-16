@@ -2,17 +2,6 @@
   "Statement": [
     {
       "Action": [
-        "aoss:ListCollections",
-        "aoss:BatchGetCollection",
-        "aoss:GetAccessPolicy",
-        "aoss:GetSecurityPolicy"
-      ],
-      "Effect": "Allow",
-      "Resource": "*",
-      "Sid": "OpenSearchServerlessForKBVectorStores"
-    },
-    {
-      "Action": [
         "apigateway:GET"
       ],
       "Effect": "Allow",
@@ -55,48 +44,11 @@
     },
     {
       "Action": [
-        "bedrock-agentcore:ListApiKeyCredentialProviders",
-        "bedrock-agentcore:GetApiKeyCredentialProvider",
-        "bedrock-agentcore:ListOauth2CredentialProviders",
-        "bedrock-agentcore:GetOauth2CredentialProvider",
-        "bedrock-agentcore:ListPaymentCredentialProviders",
-        "bedrock-agentcore:GetPaymentCredentialProvider",
-        "bedrock-agentcore:ListPaymentConnectors",
-        "bedrock-agentcore:GetPaymentConnector",
-        "bedrock-agentcore:ListPaymentManagers",
-        "bedrock-agentcore:GetPaymentManager",
-        "bedrock-agentcore:GetTokenVault",
-        "bedrock-agentcore:ListWorkloadIdentities",
-        "bedrock-agentcore:GetWorkloadIdentity",
-        "bedrock-agentcore:ListEvaluators",
-        "bedrock-agentcore:GetEvaluator",
-        "bedrock-agentcore:ListOnlineEvaluationConfigs",
-        "bedrock-agentcore:GetOnlineEvaluationConfig",
-        "bedrock-agentcore:ListDatasets",
-        "bedrock-agentcore:ListMemories",
-        "bedrock-agentcore:GetMemory",
-        "bedrock-agentcore:GetResourcePolicy",
-        "bedrock-agentcore:ListTagsForResource"
-      ],
-      "Effect": "Allow",
-      "Resource": "*",
-      "Sid": "ActSecurityBedrockAgentcoreRead"
-    },
-    {
-      "Action": [
         "signin:GetResourcePolicy"
       ],
       "Effect": "Allow",
       "Resource": "*",
       "Sid": "ActSecuritySigninResourcePolicyRead"
-    },
-    {
-      "Action": [
-        "sagemaker:GetModelPackageGroupPolicy"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:sagemaker:*:*:model-package-group/*",
-      "Sid": "ActSecuritySageMakerModelPackageGroupPolicyRead"
     },
     {
       "Action": [

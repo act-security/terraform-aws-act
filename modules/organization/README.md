@@ -46,13 +46,14 @@ Trusted access for StackSets with AWS Organizations must be on (`aws cloudformat
 | external\_id | The external ID every Act role's trust policy requires, `external_id` from the Act onboarding values. Not a secret. | `string` | n/a | yes |
 | role\_name | Name of the role in this account, `role_name` from the Act onboarding values. | `string` | n/a | yes |
 | call\_as | `SELF` in the management account, `DELEGATED_ADMIN` in a CloudFormation StackSets delegated administrator account. | `string` | `"SELF"` | no |
-| cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
+| cloudtrail\_bucket\_name | The S3 bucket your CloudTrail trail writes logs to. `*` lets Act read logs under `AWSLogs/` in any bucket. Ignored when `permission_groups` is set. | `string` | `"*"` | no |
 | deprecated\_principal\_arns | Act principals being retired that the roles keep trusting during a rotation, `deprecated_principal_arns` from the Act onboarding values. | `list(string)` | `[]` | no |
-| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its roles so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
+| enable\_eks\_cluster\_access | See access inside your EKS clusters. If turned off, Act sees your EKS clusters but not the access inside them. Ignored when `permission_groups` is set. | `bool` | `true` | no |
 | excluded\_account\_ids | Member accounts the StackSet skips, as 12-digit IDs. Pass the same list to `excluded_account_ids` of `act_aws_organization_deployment`. | `set(string)` | `[]` | no |
 | member\_role\_name | Name of the role in each member account, `member_role_name` from the Act onboarding values. Null uses `role_name`. | `string` | `null` | no |
 | member\_role\_path | IAM path of the member roles, `member_role_path` from the Act onboarding values. | `string` | `"/"` | no |
 | organizational\_unit\_ids | The organizational units to cover, `ou-...`. Set this or `root_id`. To leave a unit out, list the others. | `set(string)` | `[]` | no |
+| permission\_groups | The permission groups to grant every Act role, each set to {}: `kubernetes`, `cloudtrail_logs` (optionally `{ bucket = "<name>" }` to limit log reads to that bucket) and `ai_services`. A group left out is not granted, and `{}` grants none. When set, it decides every group and the bucket, and `enable_eks_cluster_access` and `cloudtrail_bucket_name` are ignored. Null grants every group, as the Act console does by default. | `any` | `null` | no |
 | permissions\_boundary\_arn | ARN of a permissions boundary to attach to the role in this account. Member roles get none. | `string` | `null` | no |
 | root\_id | The organization root, `r-...`, to cover every account. Set this or `organizational_unit_ids`. From the management account both can be left out and the module covers the root. | `string` | `null` | no |
 | tags | AWS tags for the role, policies and StackSet. | `map(string)` | `{}` | no |
@@ -63,12 +64,14 @@ Trusted access for StackSets with AWS Organizations must be on (`aws cloudformat
 | ---- | ----------- |
 | custom\_policy\_documents | Act policy documents attached to the role in this account, as JSON, by name. Member roles get the same documents for their own account. |
 | deployment\_version | The Act role version this release deploys. |
+| disabled\_capabilities | The Act capabilities of the permission groups left out. Pass it to `disabled_capabilities` of `act_aws_organization_deployment`. |
 | excluded\_account\_ids | Member accounts left out, passed through. Pass it to `excluded_account_ids` of `act_aws_organization_deployment`. |
 | external\_id | The external ID every Act role's trust policy requires, passed through. Not a secret. |
 | managed\_policy\_arns | AWS managed policies attached to every Act role. |
 | member\_role\_name | Name of the Act role in each member account. |
 | organization\_id | The AWS organization, `o-...`. Pass it to `organization_id` of `act_aws_organization_deployment`. |
 | organizational\_unit\_ids | The organizational units the StackSet targets, or null when it targets the root. Pass it to `organizational_unit_ids` of `act_aws_organization_deployment`. |
+| permission\_groups | Every permission group, true when it is granted. |
 | permissions\_hash | SHA-256 over the permission files of this release. |
 | role\_arn | ARN of the role Act assumes in this account. Pass it to `role_arn` of `act_aws_organization_deployment`. |
 | role\_name | Name of the role Act assumes in this account. |

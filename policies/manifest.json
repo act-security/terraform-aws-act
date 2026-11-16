@@ -1,5 +1,5 @@
 {
-  "deployment_version": "20261109-4aa4885f",
+  "deployment_version": "20261116-28c5963b",
   "managed_policies": [
     {
       "arn": "arn:aws:iam::aws:policy/SecurityAudit",
@@ -10,21 +10,46 @@
       "reason": "Lists and describes resources across AWS services, so Act can inventory what exists."
     }
   ],
-  "custom_policies": [
+  "core_policies": [
     {
       "name": "CustomPolicy1",
-      "file": "custom-policy-1.json",
-      "capability": null
+      "file": "custom-policy-1.json"
     },
     {
       "name": "CustomPolicy2",
-      "file": "custom-policy-2.json",
-      "capability": null
+      "file": "custom-policy-2.json"
+    }
+  ],
+  "permission_groups": [
+    {
+      "group": "kubernetes",
+      "capability": "eks_cluster_access",
+      "label": "Scan Kubernetes inside EKS clusters",
+      "description": "Lets the role create a view-only EKS access entry for itself on each cluster and read Kubernetes objects through it.",
+      "policy": {
+        "name": "EksClusterAccess",
+        "file": "eks-cluster-access.json"
+      }
     },
     {
-      "name": "EksClusterAccess",
-      "file": "eks-cluster-access.json",
-      "capability": "enable_eks_cluster_access"
+      "group": "cloudtrail_logs",
+      "capability": "cloudtrail_logs",
+      "label": "CloudTrail logs",
+      "description": "Lets the role read CloudTrail log files in S3 and log events in CloudWatch Logs, and decrypt them with KMS through those services.",
+      "policy": {
+        "name": "CloudTrailLogs",
+        "file": "cloudtrail-logs.json"
+      }
+    },
+    {
+      "group": "ai_services",
+      "capability": "ai_services",
+      "label": "AI services",
+      "description": "Lets the role read Amazon Bedrock, Bedrock AgentCore, OpenSearch Serverless and SageMaker model package group details the AWS managed policies leave out.",
+      "policy": {
+        "name": "AiServices",
+        "file": "ai-services.json"
+      }
     }
   ]
 }
