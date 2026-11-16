@@ -15,6 +15,8 @@ locals {
 
   delegated_admin_account_ids    = var.call_as == "DELEGATED_ADMIN" ? [data.aws_caller_identity.current.account_id] : []
   stack_set_excluded_account_ids = setunion(var.excluded_account_ids, local.delegated_admin_account_ids)
+  account_filter_type            = length(local.stack_set_excluded_account_ids) > 0 ? "DIFFERENCE" : "NONE"
+  account_filter_accounts        = length(local.stack_set_excluded_account_ids) > 0 ? local.stack_set_excluded_account_ids : null
 }
 
 module "role" {
@@ -71,14 +73,30 @@ resource "aws_cloudformation_stack_set" "members" {
   }
 }
 
-resource "aws_cloudformation_stack_instances" "members" {
+resource "aws_cloudformation_stack_set_instance" "root" {
+  count = local.root_id == null ? 0 : 1
+
+  stack_set_name            = aws_cloudformation_stack_set.members.name
+  call_as                   = var.call_as
+  stack_set_instance_region = data.aws_region.current.region
+
+  deployment_targets {
+    organizational_unit_ids = [local.root_id]
+    account_filter_type     = local.account_filter_type
+    accounts                = local.account_filter_accounts
+  }
+}
+
+resource "aws_cloudformation_stack_instances" "units" {
+  count = local.root_id == null ? 1 : 0
+
   stack_set_name = aws_cloudformation_stack_set.members.name
   call_as        = var.call_as
   regions        = [data.aws_region.current.region]
 
   deployment_targets {
-    organizational_unit_ids = local.target_ids
-    account_filter_type     = length(local.stack_set_excluded_account_ids) > 0 ? "DIFFERENCE" : "NONE"
-    accounts                = length(local.stack_set_excluded_account_ids) > 0 ? local.stack_set_excluded_account_ids : null
+    organizational_unit_ids = var.organizational_unit_ids
+    account_filter_type     = local.account_filter_type
+    accounts                = local.account_filter_accounts
   }
 }

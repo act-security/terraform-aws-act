@@ -65,13 +65,18 @@ run "covers_the_whole_organization_from_the_management_account" {
   }
 
   assert {
-    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].account_filter_type == "NONE"
+    condition     = aws_cloudformation_stack_set_instance.root[0].deployment_targets[0].account_filter_type == "NONE"
     error_message = "Nothing is filtered when no account is excluded."
   }
 
   assert {
-    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].organizational_unit_ids == toset(["r-ab12"])
+    condition     = aws_cloudformation_stack_set_instance.root[0].deployment_targets[0].organizational_unit_ids == toset(["r-ab12"])
     error_message = "The StackSet must target the root."
+  }
+
+  assert {
+    condition     = length(aws_cloudformation_stack_instances.units) == 0
+    error_message = "A root target uses the single instance resource, which reads back stably."
   }
 
   assert {
@@ -141,12 +146,12 @@ run "covers_organizational_units" {
   }
 
   assert {
-    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].organizational_unit_ids == toset(["ou-ab12-11111111", "ou-ab12-22222222"])
+    condition     = aws_cloudformation_stack_instances.units[0].deployment_targets[0].organizational_unit_ids == toset(["ou-ab12-11111111", "ou-ab12-22222222"])
     error_message = "The StackSet must target the units."
   }
 
   assert {
-    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].account_filter_type == "DIFFERENCE"
+    condition     = aws_cloudformation_stack_instances.units[0].deployment_targets[0].account_filter_type == "DIFFERENCE"
     error_message = "Excluded accounts must be filtered out of the StackSet."
   }
 
@@ -170,12 +175,12 @@ run "skips_the_delegated_admin_account" {
   }
 
   assert {
-    condition     = aws_cloudformation_stack_set.members.call_as == "DELEGATED_ADMIN" && aws_cloudformation_stack_instances.members.call_as == "DELEGATED_ADMIN"
+    condition     = aws_cloudformation_stack_set.members.call_as == "DELEGATED_ADMIN" && aws_cloudformation_stack_instances.units[0].call_as == "DELEGATED_ADMIN"
     error_message = "A delegated administrator calls the StackSet as one."
   }
 
   assert {
-    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].accounts == toset(["111111111111", "333333333333"])
+    condition     = aws_cloudformation_stack_instances.units[0].deployment_targets[0].accounts == toset(["111111111111", "333333333333"])
     error_message = "The StackSet must skip excluded accounts and the delegated administrator, whose role the module creates directly."
   }
 
