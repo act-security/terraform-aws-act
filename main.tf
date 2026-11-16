@@ -8,8 +8,9 @@ module "permissions" {
   partition                 = data.aws_partition.current.partition
   account_id                = data.aws_caller_identity.current.account_id
   role_name                 = var.role_name
-  cloudtrail_bucket_name    = var.cloudtrail_bucket_name
+  permission_groups         = var.permission_groups
   enable_eks_cluster_access = var.enable_eks_cluster_access
+  cloudtrail_bucket_name    = var.cloudtrail_bucket_name
 }
 
 locals {
@@ -41,8 +42,8 @@ resource "aws_iam_role_policy_attachment" "managed" {
   policy_arn = each.value
 }
 
-resource "aws_iam_policy" "custom" {
-  for_each = module.permissions.custom_policy_documents
+resource "aws_iam_policy" "group" {
+  for_each = module.permissions.group_policy_documents
 
   name        = "${var.role_name}-${each.key}"
   description = "Act read permissions: ${each.key}"
@@ -50,8 +51,26 @@ resource "aws_iam_policy" "custom" {
   tags        = var.tags
 }
 
-resource "aws_iam_role_policy_attachment" "custom" {
-  for_each = aws_iam_policy.custom
+resource "aws_iam_role_policy_attachment" "group" {
+  for_each = aws_iam_policy.group
+
+  role       = aws_iam_role.act.name
+  policy_arn = each.value.arn
+}
+
+resource "aws_iam_policy" "core" {
+  for_each = module.permissions.core_policy_documents
+
+  name        = "${var.role_name}-${each.key}"
+  description = "Act read permissions: ${each.key}"
+  policy      = each.value
+  tags        = var.tags
+
+  depends_on = [aws_iam_role_policy_attachment.group]
+}
+
+resource "aws_iam_role_policy_attachment" "core" {
+  for_each = aws_iam_policy.core
 
   role       = aws_iam_role.act.name
   policy_arn = each.value.arn

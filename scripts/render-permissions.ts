@@ -9,11 +9,22 @@ const MANIFEST_FILE = 'manifest.json'
 const AWS_MANAGED_POLICY_DOCS = 'https://docs.aws.amazon.com/aws-managed-policy/latest/reference'
 const PLACEHOLDERS = ['account_id', 'partition', 'role_name', 'cloudtrail_bucket_name'] as const
 
+const PolicyFileSchema = z.strictObject({ name: z.string().min(1), file: z.string().endsWith('.json') })
+
 const ManifestSchema = z.strictObject({
   deployment_version: z.string().min(1),
   managed_policies: z.array(z.strictObject({ arn: z.string().startsWith('arn:aws:iam::aws:policy/'), reason: z.string().min(1) })).min(1),
-  custom_policies: z
-    .array(z.strictObject({ name: z.string().min(1), file: z.string().endsWith('.json'), capability: z.string().min(1).nullable() }))
+  core_policies: z.array(PolicyFileSchema).min(1),
+  permission_groups: z
+    .array(
+      z.strictObject({
+        group: z.string().min(1),
+        capability: z.string().min(1),
+        label: z.string().min(1),
+        description: z.string().min(1),
+        policy: PolicyFileSchema,
+      }),
+    )
     .min(1),
 })
 
@@ -26,7 +37,8 @@ const CliSchema = z.union([
 ])
 
 type Manifest = z.infer<typeof ManifestSchema>
-type CustomPolicy = Manifest['custom_policies'][number]
+type PolicyFile = z.infer<typeof PolicyFileSchema>
+type PermissionGroup = Manifest['permission_groups'][number]
 type PolicyDocument = z.infer<typeof PolicyDocumentSchema>
 
 main()
@@ -72,13 +84,21 @@ function renderPermissionsDoc({ manifest }: { manifest: Manifest }): string {
     '| ------ | --- |',
     ...manifest.managed_policies.map(renderManagedPolicyRow),
     '',
-    '### Act policies',
+    '### Act core policies',
     '',
-    `Each file is an IAM policy document. \`\${account_id}\`, \`\${partition}\`, \`\${role_name}\` and \`\${cloudtrail_bucket_name}\` are filled in for the account the role is in.`,
+    `Every role gets these. Each file is an IAM policy document; \`\${account_id}\`, \`\${partition}\`, \`\${role_name}\` and \`\${cloudtrail_bucket_name}\` are filled in for the account the role is in.`,
     '',
-    '| Policy | File | Attached | Statements | Services |',
-    '| ------ | ---- | -------- | ---------- | -------- |',
-    ...manifest.custom_policies.map(renderCustomPolicyRow),
+    '| Policy | File | Statements | Services |',
+    '| ------ | ---- | ---------- | -------- |',
+    ...manifest.core_policies.map(renderCorePolicyRow),
+    '',
+    '### Permission groups',
+    '',
+    'Every group is granted by default, as in the Act console. Set `permission_groups` to the groups to grant, for example `{ kubernetes = {}, cloudtrail_logs = { bucket = "org-trail-logs" } }`; a group left out is not granted. Pass the `disabled_capabilities` output to the Act deployment so Act knows what it cannot read.',
+    '',
+    '| Group | What it grants | Act capability | Policy | Statements | Services |',
+    '| ----- | -------------- | -------------- | ------ | ---------- | -------- |',
+    ...manifest.permission_groups.map(renderPermissionGroupRow),
     '',
   ].join('\n')
 }
@@ -88,11 +108,18 @@ function renderManagedPolicyRow({ arn, reason }: Manifest['managed_policies'][nu
   return `| [\`${name}\`](${AWS_MANAGED_POLICY_DOCS}/${name}.html) \`${arn}\` | ${reason} |`
 }
 
-function renderCustomPolicyRow(policy: CustomPolicy): string {
+function renderCorePolicyRow(policy: PolicyFile): string {
   const document = loadPolicyDocument({ file: policy.file })
-  const attached = policy.capability === null ? 'Always' : `When \`${policy.capability}\` is true (the default)`
-  const services = servicesOf({ document }).join(', ')
-  return `| \`${policy.name}\` | [\`${POLICIES_DIR}/${policy.file}\`](${POLICIES_DIR}/${policy.file}) | ${attached} | ${document.Statement.length} | ${services} |`
+  return `| \`${policy.name}\` | ${policyFileLink(policy)} | ${document.Statement.length} | ${servicesOf({ document }).join(', ')} |`
+}
+
+function renderPermissionGroupRow({ group, capability, label, description, policy }: PermissionGroup): string {
+  const document = loadPolicyDocument({ file: policy.file })
+  return `| \`${group}\` | **${label}.** ${description} | \`${capability}\` | ${policyFileLink(policy)} | ${document.Statement.length} | ${servicesOf({ document }).join(', ')} |`
+}
+
+function policyFileLink({ file }: PolicyFile): string {
+  return `[\`${POLICIES_DIR}/${file}\`](${POLICIES_DIR}/${file})`
 }
 
 function loadPolicyDocument({ file }: { file: string }): PolicyDocument {

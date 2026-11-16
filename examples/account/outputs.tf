@@ -7,3 +7,8 @@ output "account_id" {
   description = "Pass to `account_id` of `act_aws_account_deployment`."
   value       = module.act.account_id
 }
+
+output "disabled_capabilities" {
+  description = "Pass to `disabled_capabilities` of `act_aws_account_deployment`."
+  value       = module.act.disabled_capabilities
+}

@@ -70,15 +70,21 @@ variable "call_as" {
   }
 }
 
+variable "permission_groups" {
+  description = "The permission groups to grant every Act role, each set to {}: `kubernetes`, `cloudtrail_logs` (optionally `{ bucket = \"<name>\" }` to limit log reads to that bucket) and `ai_services`. A group left out is not granted, and `{}` grants none. When set, it decides every group and the bucket, and `enable_eks_cluster_access` and `cloudtrail_bucket_name` are ignored. Null grants every group, as the Act console does by default."
+  type        = any
+  default     = null
+}
+
 variable "enable_eks_cluster_access" {
-  description = "Let Act create a view-only EKS access entry for its roles so it can scan Kubernetes inside EKS clusters."
+  description = "See access inside your EKS clusters. If turned off, Act sees your EKS clusters but not the access inside them. Ignored when `permission_groups` is set."
   type        = bool
   default     = true
   nullable    = false
 }
 
 variable "cloudtrail_bucket_name" {
-  description = "The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket."
+  description = "The S3 bucket your CloudTrail trail writes logs to. `*` lets Act read logs under `AWSLogs/` in any bucket. Ignored when `permission_groups` is set."
   type        = string
   default     = "*"
   nullable    = false

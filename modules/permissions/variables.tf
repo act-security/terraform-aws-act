@@ -13,21 +13,20 @@ variable "role_name" {
   type        = string
 }
 
-variable "cloudtrail_bucket_name" {
-  description = "The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket."
-  type        = string
-  default     = "*"
-  nullable    = false
-
-  validation {
-    condition     = can(regex("^(\\*|[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])$", var.cloudtrail_bucket_name))
-    error_message = "cloudtrail_bucket_name must be * or an S3 bucket name."
-  }
+variable "permission_groups" {
+  description = "The permission groups to grant, validated by the root module. Null grants every group, with kubernetes following `enable_eks_cluster_access` and the bucket following `cloudtrail_bucket_name`."
+  type        = any
+  default     = null
 }
 
 variable "enable_eks_cluster_access" {
-  description = "Include the permissions Act needs to create a view-only EKS access entry for the role."
+  description = "Grant the kubernetes group while `permission_groups` is null."
   type        = bool
   default     = true
-  nullable    = false
+}
+
+variable "cloudtrail_bucket_name" {
+  description = "The bucket the cloudtrail_logs group reads while `permission_groups` is null."
+  type        = string
+  default     = "*"
 }

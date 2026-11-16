@@ -1,0 +1,84 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectRetention",
+        "s3:GetObjectAttributes"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:${partition}:s3:::${cloudtrail_bucket_name}/AWSLogs/*",
+        "arn:${partition}:s3:::${cloudtrail_bucket_name}/*/AWSLogs/*"
+      ],
+      "Sid": "ActSecurityS3AWSLogsGetObject"
+    },
+    {
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "AWSLogs/*",
+            "*/AWSLogs/*"
+          ]
+        }
+      },
+      "Effect": "Allow",
+      "Resource": [
+        "arn:${partition}:s3:::${cloudtrail_bucket_name}"
+      ],
+      "Sid": "ActSecurityS3AWSLogsListBucket"
+    },
+    {
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": [
+            "s3.*.amazonaws.com"
+          ]
+        }
+      },
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:kms:*:*:key/*"
+      ],
+      "Sid": "ActSecurityS3KMSDecrypt"
+    },
+    {
+      "Action": [
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:GetQueryResults"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:*",
+        "arn:aws:logs:*:*:log-group:*:*"
+      ],
+      "Sid": "ActSecurityCloudWatchLogsReadAccess"
+    },
+    {
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": [
+            "logs.*.amazonaws.com"
+          ]
+        }
+      },
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:kms:*:*:key/*"
+      ],
+      "Sid": "ActSecurityCloudWatchKMSDecrypt"
+    }
+  ],
+  "Version": "2012-10-17"
+}

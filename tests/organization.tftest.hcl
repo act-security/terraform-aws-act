@@ -98,6 +98,8 @@ run "renders_member_policies_per_account" {
       "ActSecurityCustomPolicy1",
       "ActSecurityCustomPolicy2",
       "ActSecurityEksClusterAccess",
+      "ActSecurityCloudTrailLogs",
+      "ActSecurityAiServices",
     ])
     error_message = "The member template must create the role and one managed policy per Act policy."
   }
@@ -125,6 +127,38 @@ run "renders_member_policies_per_account" {
   assert {
     condition     = length(aws_cloudformation_stack_set.members.template_body) <= 51200
     error_message = "The member template must fit the CloudFormation template body limit."
+  }
+}
+
+run "member_roles_follow_the_permission_groups" {
+  command = plan
+
+  module {
+    source = "./modules/organization"
+  }
+
+  variables {
+    permission_groups = { kubernetes = {} }
+  }
+
+  assert {
+    condition = toset(keys(jsondecode(aws_cloudformation_stack_set.members.template_body).Resources)) == toset([
+      "ActSecurityRole",
+      "ActSecurityCustomPolicy1",
+      "ActSecurityCustomPolicy2",
+      "ActSecurityEksClusterAccess",
+    ])
+    error_message = "Member roles must get only the granted groups."
+  }
+
+  assert {
+    condition     = toset(keys(module.role.custom_policy_documents)) == toset(["CustomPolicy1", "CustomPolicy2", "EksClusterAccess"])
+    error_message = "The role in this account must get the same groups as the member roles."
+  }
+
+  assert {
+    condition     = output.disabled_capabilities == tolist(["ai_services", "cloudtrail_logs"])
+    error_message = "Act must be told which capabilities are off."
   }
 }
 

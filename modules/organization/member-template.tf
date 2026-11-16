@@ -2,7 +2,7 @@ locals {
   member_role_resource = "ActSecurityRole"
 
   member_policy_resources = {
-    for name, document in module.member_permissions.custom_policy_documents : "ActSecurity${name}" => {
+    for name, document in merge(module.member_permissions.core_policy_documents, module.member_permissions.group_policy_documents) : "ActSecurity${name}" => {
       Type = "AWS::IAM::ManagedPolicy"
       Properties = {
         ManagedPolicyName = "${local.member_role_name}-${name}"

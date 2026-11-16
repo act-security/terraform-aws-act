@@ -26,6 +26,7 @@ module "role" {
   external_id               = var.external_id
   act_principal_arn         = var.act_principal_arn
   deprecated_principal_arns = var.deprecated_principal_arns
+  permission_groups         = var.permission_groups
   enable_eks_cluster_access = var.enable_eks_cluster_access
   cloudtrail_bucket_name    = var.cloudtrail_bucket_name
   permissions_boundary_arn  = var.permissions_boundary_arn
@@ -38,8 +39,9 @@ module "member_permissions" {
   partition                 = "$${AWS::Partition}"
   account_id                = "$${AWS::AccountId}"
   role_name                 = local.member_role_name
-  cloudtrail_bucket_name    = var.cloudtrail_bucket_name
+  permission_groups         = var.permission_groups
   enable_eks_cluster_access = var.enable_eks_cluster_access
+  cloudtrail_bucket_name    = var.cloudtrail_bucket_name
 }
 
 resource "aws_cloudformation_stack_set" "members" {

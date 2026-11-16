@@ -29,8 +29,18 @@ output "managed_policy_arns" {
 }
 
 output "custom_policy_documents" {
-  description = "Act policy documents attached to the role, as JSON, by name."
-  value       = module.permissions.custom_policy_documents
+  description = "Act policy documents attached to the role, as JSON, by name: the core policies and those of the granted permission groups."
+  value       = merge(module.permissions.core_policy_documents, module.permissions.group_policy_documents)
+}
+
+output "permission_groups" {
+  description = "Every permission group, true when it is granted."
+  value       = module.permissions.enabled_permission_groups
+}
+
+output "disabled_capabilities" {
+  description = "The Act capabilities of the permission groups left out. Pass it to `disabled_capabilities` of `act_aws_account_deployment`."
+  value       = module.permissions.disabled_capabilities
 }
 
 output "deployment_version" {

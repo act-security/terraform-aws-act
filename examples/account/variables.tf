@@ -18,3 +18,9 @@ variable "act_principal_arn" {
   description = "`act_principal_arn` from the Act onboarding values."
   type        = string
 }
+
+variable "permission_groups" {
+  description = "The permission groups to grant, for example `{ kubernetes = {}, cloudtrail_logs = { bucket = \"org-trail-logs\" } }`. Null grants every group."
+  type        = any
+  default     = null
+}

@@ -58,6 +58,16 @@ output "custom_policy_documents" {
   value       = module.role.custom_policy_documents
 }
 
+output "permission_groups" {
+  description = "Every permission group, true when it is granted."
+  value       = module.role.permission_groups
+}
+
+output "disabled_capabilities" {
+  description = "The Act capabilities of the permission groups left out. Pass it to `disabled_capabilities` of `act_aws_organization_deployment`."
+  value       = module.role.disabled_capabilities
+}
+
 output "deployment_version" {
   description = "The Act role version this release deploys."
   value       = module.role.deployment_version
