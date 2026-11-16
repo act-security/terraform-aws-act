@@ -52,7 +52,7 @@ Deletion protection is on by default. Set `deletion_protection = false` and appl
 | call\_as | `SELF` in the management account, `DELEGATED_ADMIN` in a CloudFormation StackSets delegated administrator account. | `string` | `"SELF"` | no |
 | cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
 | deletion\_protection | When true, Act refuses to delete the deployment and a plan that destroys it fails. | `bool` | `true` | no |
-| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its roles so it can scan Kubernetes inside EKS clusters. | `bool` | `false` | no |
+| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its roles so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
 | excluded\_account\_ids | Member accounts Act leaves out and the StackSet skips, as 12-digit IDs. | `set(string)` | `[]` | no |
 | expected\_tenant\_id | The Act tenant this configuration must run as. The plan fails when the act provider is authenticated to another tenant. | `string` | `null` | no |
 | name | The name Act shows for the deployment, 1 to 64 characters. Act picks one when it is null. | `string` | `null` | no |

@@ -13,7 +13,7 @@ variable "allowed_regions" {
 variable "enable_eks_cluster_access" {
   description = "Let Act create a view-only EKS access entry for its role so it can scan Kubernetes inside EKS clusters."
   type        = bool
-  default     = false
+  default     = true
   nullable    = false
 }
 

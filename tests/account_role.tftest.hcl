@@ -50,8 +50,8 @@ run "creates_the_role_with_todays_permissions" {
   }
 
   assert {
-    condition     = toset(keys(aws_iam_policy.custom)) == toset(["CustomPolicy1", "CustomPolicy2"])
-    error_message = "EKS cluster access must be off by default."
+    condition     = toset(keys(aws_iam_policy.custom)) == toset(["CustomPolicy1", "CustomPolicy2", "EksClusterAccess"])
+    error_message = "EKS cluster access must be on by default, as in Act's onboarding."
   }
 
   assert {
@@ -65,7 +65,7 @@ run "creates_the_role_with_todays_permissions" {
   }
 }
 
-run "adds_eks_cluster_access" {
+run "drops_eks_cluster_access" {
   command = plan
 
   module {
@@ -73,12 +73,20 @@ run "adds_eks_cluster_access" {
   }
 
   variables {
-    enable_eks_cluster_access = true
+    enable_eks_cluster_access = false
   }
 
   assert {
-    condition     = contains(keys(aws_iam_policy.custom), "EksClusterAccess")
-    error_message = "EKS cluster access adds its policy."
+    condition     = toset(keys(aws_iam_policy.custom)) == toset(["CustomPolicy1", "CustomPolicy2"])
+    error_message = "Turning EKS cluster access off drops its policy."
+  }
+}
+
+run "names_this_role_in_the_eks_policy" {
+  command = plan
+
+  module {
+    source = "./modules/account-role"
   }
 
   assert {
@@ -104,7 +112,7 @@ run "scopes_log_reads_to_the_cloudtrail_bucket" {
   }
 }
 
-run "renders_the_partition" {
+run "renders_the_partition_where_act_does" {
   command = plan
 
   module {
@@ -119,7 +127,7 @@ run "renders_the_partition" {
   }
 
   assert {
-    condition     = alltrue([for policy in aws_iam_policy.custom : !strcontains(policy.policy, "arn:aws:")])
-    error_message = "Every ARN must use the partition the role lives in."
+    condition     = strcontains(aws_iam_policy.custom["CustomPolicy1"].policy, "arn:aws-us-gov:s3:::*/AWSLogs/*")
+    error_message = "The CloudTrail log ARNs must use the partition the role lives in."
   }
 }

@@ -66,8 +66,8 @@ run "connects_the_current_account" {
   }
 
   assert {
-    condition     = act_aws_account_deployment.this.disabled_capabilities == toset(["eks_cluster_access"])
-    error_message = "EKS cluster access must be off by default."
+    condition     = length(act_aws_account_deployment.this.disabled_capabilities) == 0
+    error_message = "EKS cluster access must be on by default, as in Act's onboarding."
   }
 
   assert {
@@ -81,16 +81,16 @@ run "connects_the_current_account" {
   }
 }
 
-run "turns_on_eks_cluster_access" {
+run "turns_off_eks_cluster_access" {
   command = plan
 
   variables {
-    enable_eks_cluster_access = true
+    enable_eks_cluster_access = false
   }
 
   assert {
-    condition     = length(act_aws_account_deployment.this.disabled_capabilities) == 0
-    error_message = "No capability is disabled when EKS cluster access is on."
+    condition     = act_aws_account_deployment.this.disabled_capabilities == toset(["eks_cluster_access"])
+    error_message = "Act must know EKS cluster access is off."
   }
 }
 

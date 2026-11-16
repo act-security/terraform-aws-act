@@ -42,7 +42,7 @@ Creates only the IAM role Act assumes, with the permissions of this module relea
 | role\_name | Name of the IAM role, `role_name` of the `act_aws_onboarding_parameters` data source. | `string` | n/a | yes |
 | cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
 | deprecated\_principal\_arns | Act principals being retired that the role keeps trusting during a rotation, `deprecated_principal_arns` of the `act_aws_onboarding_parameters` data source. | `list(string)` | `[]` | no |
-| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for this role so it can scan Kubernetes inside EKS clusters. | `bool` | `false` | no |
+| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for this role so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
 | permissions\_boundary\_arn | ARN of a permissions boundary to attach to the role. | `string` | `null` | no |
 | tags | AWS tags for the role and its policies. | `map(string)` | `{}` | no |
 

@@ -16,7 +16,7 @@ Renders the permissions Act needs from `permissions.yaml.tftpl` for one role in 
 | partition | The AWS partition the policies are for, such as `aws`. | `string` | n/a | yes |
 | role\_name | Name of the role the policies are attached to. | `string` | n/a | yes |
 | cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
-| enable\_eks\_cluster\_access | Include the permissions Act needs to create a view-only EKS access entry for the role. | `bool` | `false` | no |
+| enable\_eks\_cluster\_access | Include the permissions Act needs to create a view-only EKS access entry for the role. | `bool` | `true` | no |
 
 ## Outputs
 

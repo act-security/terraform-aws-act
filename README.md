@@ -43,7 +43,7 @@ From a StackSets delegated administrator, set `call_as = "DELEGATED_ADMIN"` and 
 
 ## Permissions
 
-Every permission the role gets ships inside the module release: `SecurityAudit`, `ViewOnlyAccess`, and Act's own read policies in [`modules/permissions/permissions.yaml.tftpl`](modules/permissions/permissions.yaml.tftpl). The Act API supplies only the role name, the Act principal and the external ID, so a module version always grants the same permissions. EKS cluster access is off unless `enable_eks_cluster_access = true`.
+Every permission the role gets ships inside the module release: `SecurityAudit`, `ViewOnlyAccess`, and Act's own read policies in [`modules/permissions/permissions.yaml.tftpl`](modules/permissions/permissions.yaml.tftpl). The Act API supplies only the role name, the Act principal and the external ID, so a module version always grants the same permissions. EKS cluster access is on, as in the Act console onboarding; set `enable_eks_cluster_access = false` to leave it out.
 
 The role carries a `DeploymentVersion` tag. When Act recommends a newer role version, the `act_module_current` check warns at plan and the `update_available` output turns true. Upgrade the module to grant the permissions Act expects.
 
@@ -89,7 +89,7 @@ Terraform 1.5.7 or later, the Act provider 0.3.0 or later, and the AWS provider 
 | allowed\_regions | The AWS regions Act scans, such as `us-east-1`. Null scans every region. | `set(string)` | `null` | no |
 | cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
 | deletion\_protection | When true, Act refuses to delete the deployment and a plan that destroys it fails. | `bool` | `false` | no |
-| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its role so it can scan Kubernetes inside EKS clusters. | `bool` | `false` | no |
+| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its role so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
 | expected\_tenant\_id | The Act tenant this configuration must run as. The plan fails when the act provider is authenticated to another tenant. | `string` | `null` | no |
 | name | The name Act shows for the deployment, 1 to 64 characters. Act picks one when it is null. | `string` | `null` | no |
 | permissions\_boundary\_arn | ARN of a permissions boundary to attach to the Act role. | `string` | `null` | no |

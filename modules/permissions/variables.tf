@@ -28,6 +28,6 @@ variable "cloudtrail_bucket_name" {
 variable "enable_eks_cluster_access" {
   description = "Include the permissions Act needs to create a view-only EKS access entry for the role."
   type        = bool
-  default     = false
+  default     = true
   nullable    = false
 }

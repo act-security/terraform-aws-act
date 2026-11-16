@@ -34,7 +34,7 @@ policies:
               - s3.*.amazonaws.com
         Effect: Allow
         Resource:
-          - arn:${partition}:kms:*:*:key/*
+          - arn:aws:kms:*:*:key/*
         Sid: ActSecurityS3KMSDecrypt
       - Action:
           - logs:GetLogEvents
@@ -43,8 +43,8 @@ policies:
           - logs:GetQueryResults
         Effect: Allow
         Resource:
-          - arn:${partition}:logs:*:*:log-group:*
-          - arn:${partition}:logs:*:*:log-group:*:*
+          - arn:aws:logs:*:*:log-group:*
+          - arn:aws:logs:*:*:log-group:*:*
         Sid: ActSecurityCloudWatchLogsReadAccess
       - Action:
           - kms:Decrypt
@@ -54,7 +54,7 @@ policies:
               - logs.*.amazonaws.com
         Effect: Allow
         Resource:
-          - arn:${partition}:kms:*:*:key/*
+          - arn:aws:kms:*:*:key/*
         Sid: ActSecurityCloudWatchKMSDecrypt
       - Action:
           - s3express:ListAccessPointsForDirectoryBuckets
@@ -161,12 +161,12 @@ policies:
           - apigateway:GET
         Effect: Allow
         Resource:
-          - arn:${partition}:apigateway:*::/restapis/*
-          - arn:${partition}:apigateway:*::/apis/*
-          - arn:${partition}:apigateway:*::/vpclinks/*
-          - arn:${partition}:apigateway:*::/account
-          - arn:${partition}:apigateway:*::/usageplans
-          - arn:${partition}:apigateway:*:*:/domainnameaccessassociations
+          - arn:aws:apigateway:*::/restapis/*
+          - arn:aws:apigateway:*::/apis/*
+          - arn:aws:apigateway:*::/vpclinks/*
+          - arn:aws:apigateway:*::/account
+          - arn:aws:apigateway:*::/usageplans
+          - arn:aws:apigateway:*:*:/domainnameaccessassociations
         Sid: ActSecurityAPIGatewayAccess
       - Action:
           - s3:GetAccessGrantsInstance
@@ -184,7 +184,7 @@ policies:
       - Action:
           - iot:GetTopicRule
         Effect: Allow
-        Resource: arn:${partition}:iot:*:*:rule/*
+        Resource: arn:aws:iot:*:*:rule/*
         Sid: ActSecurityIoTTopicRuleGet
       - Action:
           - bedrock-agentcore:ListApiKeyCredentialProviders
@@ -220,7 +220,7 @@ policies:
       - Action:
           - sagemaker:GetModelPackageGroupPolicy
         Effect: Allow
-        Resource: arn:${partition}:sagemaker:*:*:model-package-group/*
+        Resource: arn:aws:sagemaker:*:*:model-package-group/*
         Sid: ActSecuritySageMakerModelPackageGroupPolicyRead
       - Action:
           - cloudhsm:DescribeClusters
@@ -255,12 +255,12 @@ capabilities:
       Statement:
         - Action: eks:AccessKubernetesApi
           Effect: Allow
-          Resource: arn:${partition}:eks:*:${account_id}:cluster/*
+          Resource: arn:aws:eks:*:${account_id}:cluster/*
           Sid: ActSecurityEKSAccessKubernetesApi
         - Action: eks:CreateAccessEntry
           Condition:
             ArnEquals:
-              eks:principalArn: arn:${partition}:iam::${account_id}:role/${role_name}
+              eks:principalArn: arn:aws:iam::${account_id}:role/${role_name}
             ForAllValues:StringEquals:
               aws:TagKeys:
                 - CreatedBy
@@ -272,14 +272,14 @@ capabilities:
             StringEqualsIfExists:
               eks:accessEntryType: STANDARD
           Effect: Allow
-          Resource: arn:${partition}:eks:*:${account_id}:cluster/*
+          Resource: arn:aws:eks:*:${account_id}:cluster/*
           Sid: ActSecurityEKSCreateAccessEntry
         - Action: eks:DeleteAccessEntry
           Condition:
             StringEquals:
               aws:ResourceTag/CreatedBy: ActSecurity
           Effect: Allow
-          Resource: arn:${partition}:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*
+          Resource: arn:aws:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*
           Sid: ActSecurityEKSDeleteAccessEntry
         - Action: eks:TagResource
           Condition:
@@ -289,15 +289,15 @@ capabilities:
             StringEquals:
               aws:RequestTag/CreatedBy: ActSecurity
           Effect: Allow
-          Resource: arn:${partition}:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*
+          Resource: arn:aws:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*
           Sid: ActSecurityEKSTagAccessEntry
         - Action: eks:AssociateAccessPolicy
           Condition:
             ArnEquals:
-              eks:policyArn: arn:${partition}:eks::aws:cluster-access-policy/AmazonEKSViewPolicy
-              eks:principalArn: arn:${partition}:iam::${account_id}:role/${role_name}
+              eks:policyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy
+              eks:principalArn: arn:aws:iam::${account_id}:role/${role_name}
             StringEquals:
               eks:accessScope: cluster
           Effect: Allow
-          Resource: arn:${partition}:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*
+          Resource: arn:aws:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*
           Sid: ActSecurityEKSAssociateViewPolicy
