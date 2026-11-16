@@ -54,7 +54,7 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Check the generated READMEs
+      - name: Check the generated permissions section and READMEs
         run: make docs-check
 
       - name: Lint workflows

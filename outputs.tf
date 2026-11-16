@@ -1,44 +1,44 @@
-output "deployment_id" {
-  description = "The Act deployment ID."
-  value       = act_aws_account_deployment.this.id
-}
-
-output "status" {
-  description = "`active` when Act can use the role, `failed` when it cannot."
-  value       = act_aws_account_deployment.this.status
-}
-
-output "console_url" {
-  description = "The deployment's page in the Act console."
-  value       = act_aws_account_deployment.this.console_url
-}
-
 output "role_arn" {
-  description = "ARN of the role Act assumes."
-  value       = module.role.role_arn
+  description = "ARN of the role Act assumes. Pass it to `role_arn` of `act_aws_account_deployment`."
+  value       = aws_iam_role.act.arn
 }
 
 output "role_name" {
   description = "Name of the role Act assumes."
-  value       = module.role.role_name
+  value       = aws_iam_role.act.name
+}
+
+output "account_id" {
+  description = "The AWS account the role is in. Pass it to `account_id` of `act_aws_account_deployment`."
+  value       = data.aws_caller_identity.current.account_id
 }
 
 output "external_id" {
-  description = "The external ID the role's trust policy requires. Not a secret."
-  value       = act_aws_account_deployment.this.external_id
+  description = "The external ID the role's trust policy requires, passed through. Not a secret."
+  value       = var.external_id
+}
+
+output "trust_policy" {
+  description = "The role's trust policy as JSON."
+  value       = local.trust_policy
+}
+
+output "managed_policy_arns" {
+  description = "AWS managed policies attached to the role."
+  value       = module.permissions.managed_policy_arns
+}
+
+output "custom_policy_documents" {
+  description = "Act policy documents attached to the role, as JSON, by name."
+  value       = module.permissions.custom_policy_documents
 }
 
 output "deployment_version" {
-  description = "The Act role version this module release deploys."
-  value       = module.role.deployment_version
+  description = "The Act role version this release deploys, stamped on the role as the `DeploymentVersion` tag."
+  value       = module.permissions.deployment_version
 }
 
 output "permissions_hash" {
-  description = "SHA-256 of the permissions this module release grants."
-  value       = module.role.permissions_hash
-}
-
-output "update_available" {
-  description = "True when Act recommends a newer role version than the one deployed."
-  value       = act_aws_account_deployment.this.update_available
+  description = "SHA-256 over the permission files of this release."
+  value       = module.permissions.permissions_hash
 }

@@ -1,6 +1,6 @@
 # Permissions
 
-Renders the permissions Act needs from `permissions.yaml.tftpl` for one role in one account. It creates nothing; `account-role` and `organization` use it so the role in the current account and the member roles in the StackSet always grant the same permissions.
+Renders the permissions in [`policies/`](../../policies) for one role in one account. It creates nothing. The root module and `organization` use it, so the role in the current account and the member roles in the StackSet always grant the same permissions.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ Renders the permissions Act needs from `permissions.yaml.tftpl` for one role in 
 
 | Name | Description |
 | ---- | ----------- |
-| custom\_policies | Act policy documents to create and attach to the role, by name suffix. |
+| custom\_policy\_documents | Act policy documents to create and attach to the role, as JSON, by name. |
 | deployment\_version | The Act role version these permissions belong to, stamped on the role as the `DeploymentVersion` tag. |
 | managed\_policy\_arns | AWS managed policies to attach to the role. |
-| permissions\_hash | SHA-256 of the permission set. |
+| permissions\_hash | SHA-256 over every file in `policies/`. |

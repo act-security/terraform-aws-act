@@ -1,7 +1,41 @@
-variable "name" {
-  description = "The name Act shows for the deployment, 1 to 64 characters. Act picks one when it is null."
+variable "deployment_id" {
+  description = "The deployment ID from the Act onboarding values. It names the StackSet `ActSecurity-Connector-<deployment_id>`, which is how Act finds it."
+  type        = string
+}
+
+variable "role_name" {
+  description = "Name of the role in this account, `role_name` from the Act onboarding values."
+  type        = string
+}
+
+variable "member_role_name" {
+  description = "Name of the role in each member account, `member_role_name` from the Act onboarding values. Null uses `role_name`."
   type        = string
   default     = null
+}
+
+variable "member_role_path" {
+  description = "IAM path of the member roles, `member_role_path` from the Act onboarding values."
+  type        = string
+  default     = "/"
+  nullable    = false
+}
+
+variable "external_id" {
+  description = "The external ID every Act role's trust policy requires, `external_id` from the Act onboarding values. Not a secret."
+  type        = string
+}
+
+variable "act_principal_arn" {
+  description = "The Act principal the roles trust, `act_principal_arn` from the Act onboarding values."
+  type        = string
+}
+
+variable "deprecated_principal_arns" {
+  description = "Act principals being retired that the roles keep trusting during a rotation, `deprecated_principal_arns` from the Act onboarding values."
+  type        = list(string)
+  default     = []
+  nullable    = false
 }
 
 variable "root_id" {
@@ -18,7 +52,7 @@ variable "organizational_unit_ids" {
 }
 
 variable "excluded_account_ids" {
-  description = "Member accounts Act leaves out and the StackSet skips, as 12-digit IDs."
+  description = "Member accounts the StackSet skips, as 12-digit IDs. Pass the same list to `excluded_account_ids` of `act_aws_organization_deployment`."
   type        = set(string)
   default     = []
   nullable    = false
@@ -36,12 +70,6 @@ variable "call_as" {
   }
 }
 
-variable "allowed_regions" {
-  description = "The AWS regions Act scans, such as `us-east-1`. Null scans every region."
-  type        = set(string)
-  default     = null
-}
-
 variable "enable_eks_cluster_access" {
   description = "Let Act create a view-only EKS access entry for its roles so it can scan Kubernetes inside EKS clusters."
   type        = bool
@@ -57,34 +85,14 @@ variable "cloudtrail_bucket_name" {
 }
 
 variable "permissions_boundary_arn" {
-  description = "ARN of a permissions boundary to attach to the Act role in this account. Member roles get none."
+  description = "ARN of a permissions boundary to attach to the role in this account. Member roles get none."
   type        = string
   default     = null
 }
-
-variable "deletion_protection" {
-  description = "When true, Act refuses to delete the deployment and a plan that destroys it fails."
-  type        = bool
-  default     = true
-  nullable    = false
-}
-
-variable "expected_tenant_id" {
-  description = "The Act tenant this configuration must run as. The plan fails when the act provider is authenticated to another tenant."
-  type        = string
-  default     = null
-}
-
 
 variable "tags" {
-  description = "AWS tags for the IAM role, policies and StackSet."
+  description = "AWS tags for the role, policies and StackSet."
   type        = map(string)
   default     = {}
   nullable    = false
-}
-
-variable "act_tags" {
-  description = "Act tags for the deployment, at most 50. They are not AWS tags."
-  type        = map(string)
-  default     = null
 }

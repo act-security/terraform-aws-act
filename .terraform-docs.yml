@@ -2,10 +2,22 @@ formatter: markdown table
 
 header-from: .header.md
 
-recursive:
-  enabled: true
-  path: modules
-  include-main: true
+content: |-
+  {{ .Header }}
+
+  {{ include "docs/permissions.md" }}
+
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
 
 output:
   file: README.md

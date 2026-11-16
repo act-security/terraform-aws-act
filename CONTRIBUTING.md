@@ -15,29 +15,27 @@ make check
 |---|---|
 | `make fmt-check` | `terraform fmt -recursive -check` |
 | `make lint` | tflint with every rule of the Terraform ruleset, on every module and example |
-| `make docs-check` | fails when a README differs from what terraform-docs generates; `make docs` regenerates them |
+| `make docs-check` | fails when `docs/permissions.md` differs from `policies/` or a README differs from what terraform-docs generates; `make docs` regenerates them |
 | `make validate` | `terraform validate` on every module and example |
-| `make test` | `terraform test` with mock providers, no cloud or Act account needed |
+| `make test` | `terraform test` with a mock `aws` provider, no AWS account needed |
 | `make workflow-lint` | actionlint and zizmor |
 
-CI runs `validate` on Terraform 1.5.7 and the pinned version, and `test` on Terraform 1.7.5 and the pinned version, because mock providers need 1.7.
-
-Until the Act provider release that ships the deployment resources is on the registry, `make validate` and `make test` build the provider from source at `ACT_PROVIDER_REF` into a local filesystem mirror under `.act-provider/`. Remove the `act-provider` target once that release is published.
+CI runs `validate` on Terraform 1.5.7 and the pinned version, and `test` on Terraform 1.7.5 and the pinned version, because mock providers need 1.7. `scripts/render-permissions.ts` runs on Node from `mise.toml`; `make lint` also typechecks it.
 
 ## Applying against a real account
 
-Set `ACT_CLIENT_ID` and `ACT_CLIENT_SECRET` to a write key of a test tenant, point the `aws` provider at a sandbox account, and apply one of the `examples/`. Destroy afterwards: an account deployment has deletion protection off, an organization deployment has it on, so set `deletion_protection = false` and apply before you destroy it.
+Point the `aws` provider at a sandbox account, or a sandbox organization's management account, apply one of the `examples/` with the onboarding values of a test tenant, register the outputs with Act to check that Act accepts the role, then destroy.
 
 ## Permissions
 
-`modules/permissions/permissions.yaml.tftpl` is the only place permissions live. Both the role in the current account and the member-account StackSet render from it. Granting more is a breaking change: title the pull request `feat!:` so release-please cuts a major once the module is at 1.0. Removing a permission is a minor.
+`policies/` is the only place permissions live: `manifest.json` lists the AWS managed policies and the Act policy files, and each Act policy is a JSON policy document. The role in the current account, the member-account StackSet and the Permissions section of the README are all built from these files. The content mirrors what Act requests from the console; change it only together with Act's onboarding. Granting more is a breaking change: title the pull request `feat!:` so release-please cuts a major once the module is at 1.0.
 
-The `deployment_version` in that file is the value Act compares with the role's `DeploymentVersion` tag. Update it together with the policy content, to the version Act ships with that content.
+`deployment_version` in `manifest.json` is the value Act compares with the role's `DeploymentVersion` tag. Update it together with the policy content, to the version Act ships with that content.
 
 ## Rules
 
-- No comments in Terraform, YAML or the Makefile. Put the reasoning in variable descriptions, the README headers (`.header.md`) or the pull request.
-- No `provider` blocks in a module. Examples may configure providers.
+- No comments in Terraform, TypeScript, YAML or the Makefile. Put the reasoning in variable descriptions, the README headers (`.header.md`) or the pull request.
+- The module uses only the `aws` provider and has no `provider` blocks. Examples may configure providers.
 - Pull request titles are conventional commits. Pull requests are squash-merged, and release-please builds versions and the changelog from the titles.
 - Never commit a real client secret, token, tenant ID or account ID. Use the documentation placeholders already in the examples.
 

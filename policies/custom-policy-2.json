@@ -1,0 +1,138 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "aoss:ListCollections",
+        "aoss:BatchGetCollection",
+        "aoss:GetAccessPolicy",
+        "aoss:GetSecurityPolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "OpenSearchServerlessForKBVectorStores"
+    },
+    {
+      "Action": [
+        "apigateway:GET"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:apigateway:*::/restapis/*",
+        "arn:aws:apigateway:*::/apis/*",
+        "arn:aws:apigateway:*::/vpclinks/*",
+        "arn:aws:apigateway:*::/account",
+        "arn:aws:apigateway:*::/usageplans",
+        "arn:aws:apigateway:*:*:/domainnameaccessassociations"
+      ],
+      "Sid": "ActSecurityAPIGatewayAccess"
+    },
+    {
+      "Action": [
+        "s3:GetAccessGrantsInstance",
+        "s3:ListAccessGrantsLocations",
+        "s3:ListTagsForResource"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityS3AccessGrantsRead"
+    },
+    {
+      "Action": [
+        "s3:GetJobTagging",
+        "s3:GetStorageLensConfigurationTagging"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityS3ControlTaggingRead"
+    },
+    {
+      "Action": [
+        "iot:GetTopicRule"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:iot:*:*:rule/*",
+      "Sid": "ActSecurityIoTTopicRuleGet"
+    },
+    {
+      "Action": [
+        "bedrock-agentcore:ListApiKeyCredentialProviders",
+        "bedrock-agentcore:GetApiKeyCredentialProvider",
+        "bedrock-agentcore:ListOauth2CredentialProviders",
+        "bedrock-agentcore:GetOauth2CredentialProvider",
+        "bedrock-agentcore:ListPaymentCredentialProviders",
+        "bedrock-agentcore:GetPaymentCredentialProvider",
+        "bedrock-agentcore:ListPaymentConnectors",
+        "bedrock-agentcore:GetPaymentConnector",
+        "bedrock-agentcore:ListPaymentManagers",
+        "bedrock-agentcore:GetPaymentManager",
+        "bedrock-agentcore:GetTokenVault",
+        "bedrock-agentcore:ListWorkloadIdentities",
+        "bedrock-agentcore:GetWorkloadIdentity",
+        "bedrock-agentcore:ListEvaluators",
+        "bedrock-agentcore:GetEvaluator",
+        "bedrock-agentcore:ListOnlineEvaluationConfigs",
+        "bedrock-agentcore:GetOnlineEvaluationConfig",
+        "bedrock-agentcore:ListDatasets",
+        "bedrock-agentcore:ListMemories",
+        "bedrock-agentcore:GetMemory",
+        "bedrock-agentcore:GetResourcePolicy",
+        "bedrock-agentcore:ListTagsForResource"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityBedrockAgentcoreRead"
+    },
+    {
+      "Action": [
+        "signin:GetResourcePolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecuritySigninResourcePolicyRead"
+    },
+    {
+      "Action": [
+        "sagemaker:GetModelPackageGroupPolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:sagemaker:*:*:model-package-group/*",
+      "Sid": "ActSecuritySageMakerModelPackageGroupPolicyRead"
+    },
+    {
+      "Action": [
+        "cloudhsm:DescribeClusters"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityCloudHsmRead"
+    },
+    {
+      "Action": [
+        "cloudtrail:ListEventDataStores",
+        "cloudtrail:GetEventDataStore",
+        "cloudtrail:ListChannels",
+        "cloudtrail:GetChannel",
+        "cloudtrail:ListDashboards",
+        "cloudtrail:GetDashboard",
+        "cloudtrail:GetResourcePolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityCloudTrailLakeRead"
+    },
+    {
+      "Action": [
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:DescribeGeneratedTemplate",
+        "cloudformation:DescribeResourceScan",
+        "cloudformation:DescribePublisher",
+        "cloudformation:DescribeType",
+        "cloudformation:BatchDescribeTypeConfigurations"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityCloudFormationRead"
+    }
+  ],
+  "Version": "2012-10-17"
+}

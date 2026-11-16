@@ -21,10 +21,10 @@ Before 1.0, only the latest release gets fixes. From 1.0, the latest minor of th
 
 ## Scope
 
-In scope: this module, the IAM trust and permissions it creates, and its GitHub workflows. A release whose role trusts a principal other than the one the `act_aws_onboarding_parameters` data source returns, or whose trust policy does not require the external ID, is a vulnerability.
+In scope: this module, the IAM trust and permissions it creates, and its GitHub workflows. A release whose role trusts a principal other than `act_principal_arn` and `deprecated_principal_arns`, or whose trust policy does not require the external ID, is a vulnerability.
 
 Out of scope: the Act platform itself (report it to security@act.security directly) and the Act provider (report it in its own repository).
 
 ## What the module grants
 
-Every permission ships inside the release, in `modules/permissions/permissions.yaml.tftpl`. The Act API supplies only the role name, the Act principal and the external ID, never policy content. Compare `permissions_hash` across versions to see whether an upgrade changes what Act can read.
+Every permission ships inside the release, in `policies/`, and the README lists them. The inputs are only the role name, the Act principal, the external ID and the targets, never policy content. Compare `permissions_hash` across versions to see whether an upgrade changes what Act can read.

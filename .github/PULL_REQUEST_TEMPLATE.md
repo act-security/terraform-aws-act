@@ -15,7 +15,7 @@
 
 - [ ] The PR title is a conventional commit; release-please reads the squash title
 - [ ] `make docs` output is committed
-- [ ] A permission added to `modules/permissions/permissions.yaml.tftpl` is a breaking change (`feat!:`)
-- [ ] No comments added to Terraform, YAML or the Makefile
+- [ ] A permission added under `policies/` is a breaking change (`feat!:`) and matches what Act requests
+- [ ] No comments added to Terraform, TypeScript, YAML or the Makefile
 - [ ] No secret, tenant credential or real account ID in examples or tests
 - [ ] `CHANGELOG.md` not edited by hand

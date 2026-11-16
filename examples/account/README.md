@@ -1,3 +1,3 @@
 # Single account
 
-Connects the account the `aws` provider runs in. Set `ACT_CLIENT_ID` and `ACT_CLIENT_SECRET` to an Act API key with write access, then run `terraform apply`.
+Creates the Act role in the account the `aws` provider runs in. Set the variables to the onboarding values Act issues for the account, apply, then register `role_arn` and `account_id` with Act.

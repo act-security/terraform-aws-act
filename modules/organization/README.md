@@ -1,26 +1,22 @@
 # Organization
 
-Connects an AWS organization to Act. Run it in the management account, or in a CloudFormation StackSets delegated administrator account with `call_as = "DELEGATED_ADMIN"`.
+Creates the Act role in the current account and a service-managed StackSet named `ActSecurity-Connector-<deployment_id>` that creates the same role in every member account under the targeted root or organizational units. Act finds the StackSet by that name and reads the member accounts from it.
 
-It creates the Act role in the current account, a service-managed StackSet named `ActSecurity-Connector-<deployment_id>` that creates the role in every member account under the targeted root or organizational units, and the `act_aws_organization_deployment`. Excluded accounts are left out of both the StackSet and Act. A delegated administrator account is left out of the StackSet only, because the module creates its role directly. Act reads member accounts from the StackSet and does not wait for the rollout.
+Run it in the management account, or in a CloudFormation StackSets delegated administrator account with `call_as = "DELEGATED_ADMIN"`. A delegated administrator cannot list the organization roots, so set `root_id` or `organizational_unit_ids` there. The StackSet skips the delegated administrator account, because the module creates its role directly. `excluded_account_ids` leaves accounts out of the StackSet; pass the same list to Act.
 
 Trusted access for StackSets with AWS Organizations must be on (`aws cloudformation activate-organizations-access`), and a delegated administrator must be registered from the management account first.
-
-Deletion protection is on by default. Set `deletion_protection = false` and apply before you destroy.
 
 ## Requirements
 
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.5.7 |
-| act | >= 0.3.0 |
 | aws | >= 6.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| act | >= 0.3.0 |
 | aws | >= 6.0 |
 
 ## Modules
@@ -28,17 +24,14 @@ Deletion protection is on by default. Set `deletion_protection = false` and appl
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | member\_permissions | ../permissions | n/a |
-| role | ../account-role | n/a |
+| role | ../.. | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
-| [act_aws_organization_deployment.this](https://registry.terraform.io/providers/act-security/act/latest/docs/resources/aws_organization_deployment) | resource |
 | [aws_cloudformation_stack_instances.members](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack_instances) | resource |
 | [aws_cloudformation_stack_set.members](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack_set) | resource |
-| [act_aws_onboarding_parameters.this](https://registry.terraform.io/providers/act-security/act/latest/docs/data-sources/aws_onboarding_parameters) | data source |
-| [act_current_identity.current](https://registry.terraform.io/providers/act-security/act/latest/docs/data-sources/current_identity) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_organizations_organization.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/organizations_organization) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
@@ -47,32 +40,37 @@ Deletion protection is on by default. Set `deletion_protection = false` and appl
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| act\_tags | Act tags for the deployment, at most 50. They are not AWS tags. | `map(string)` | `null` | no |
-| allowed\_regions | The AWS regions Act scans, such as `us-east-1`. Null scans every region. | `set(string)` | `null` | no |
+| act\_principal\_arn | The Act principal the roles trust, `act_principal_arn` from the Act onboarding values. | `string` | n/a | yes |
+| deployment\_id | The deployment ID from the Act onboarding values. It names the StackSet `ActSecurity-Connector-<deployment_id>`, which is how Act finds it. | `string` | n/a | yes |
+| external\_id | The external ID every Act role's trust policy requires, `external_id` from the Act onboarding values. Not a secret. | `string` | n/a | yes |
+| role\_name | Name of the role in this account, `role_name` from the Act onboarding values. | `string` | n/a | yes |
 | call\_as | `SELF` in the management account, `DELEGATED_ADMIN` in a CloudFormation StackSets delegated administrator account. | `string` | `"SELF"` | no |
 | cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
-| deletion\_protection | When true, Act refuses to delete the deployment and a plan that destroys it fails. | `bool` | `true` | no |
+| deprecated\_principal\_arns | Act principals being retired that the roles keep trusting during a rotation, `deprecated_principal_arns` from the Act onboarding values. | `list(string)` | `[]` | no |
 | enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its roles so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
-| excluded\_account\_ids | Member accounts Act leaves out and the StackSet skips, as 12-digit IDs. | `set(string)` | `[]` | no |
-| expected\_tenant\_id | The Act tenant this configuration must run as. The plan fails when the act provider is authenticated to another tenant. | `string` | `null` | no |
-| name | The name Act shows for the deployment, 1 to 64 characters. Act picks one when it is null. | `string` | `null` | no |
+| excluded\_account\_ids | Member accounts the StackSet skips, as 12-digit IDs. Pass the same list to `excluded_account_ids` of `act_aws_organization_deployment`. | `set(string)` | `[]` | no |
+| member\_role\_name | Name of the role in each member account, `member_role_name` from the Act onboarding values. Null uses `role_name`. | `string` | `null` | no |
+| member\_role\_path | IAM path of the member roles, `member_role_path` from the Act onboarding values. | `string` | `"/"` | no |
 | organizational\_unit\_ids | The organizational units to cover, `ou-...`. Set this or `root_id`. To leave a unit out, list the others. | `set(string)` | `[]` | no |
-| permissions\_boundary\_arn | ARN of a permissions boundary to attach to the Act role in this account. Member roles get none. | `string` | `null` | no |
+| permissions\_boundary\_arn | ARN of a permissions boundary to attach to the role in this account. Member roles get none. | `string` | `null` | no |
 | root\_id | The organization root, `r-...`, to cover every account. Set this or `organizational_unit_ids`. From the management account both can be left out and the module covers the root. | `string` | `null` | no |
-| tags | AWS tags for the IAM role, policies and StackSet. | `map(string)` | `{}` | no |
+| tags | AWS tags for the role, policies and StackSet. | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
-| console\_url | The deployment's page in the Act console. |
-| deployment\_id | The Act deployment ID. |
-| deployment\_version | The Act role version this module release deploys. |
-| external\_id | The external ID every Act role's trust policy requires. Not a secret. |
-| management\_account\_id | The organization's management account, as AWS reports it. |
+| custom\_policy\_documents | Act policy documents attached to the role in this account, as JSON, by name. Member roles get the same documents for their own account. |
+| deployment\_version | The Act role version this release deploys. |
+| excluded\_account\_ids | Member accounts left out, passed through. Pass it to `excluded_account_ids` of `act_aws_organization_deployment`. |
+| external\_id | The external ID every Act role's trust policy requires, passed through. Not a secret. |
+| managed\_policy\_arns | AWS managed policies attached to every Act role. |
 | member\_role\_name | Name of the Act role in each member account. |
-| permissions\_hash | SHA-256 of the permissions this module release grants. |
-| role\_arn | ARN of the role Act assumes in this account. |
-| stack\_set\_name | The StackSet that creates the Act role in each member account. |
-| status | `active` when Act can use the role, `failed` when it cannot. |
-| update\_available | True when Act recommends a newer role version than the one deployed. |
+| organization\_id | The AWS organization, `o-...`. Pass it to `organization_id` of `act_aws_organization_deployment`. |
+| organizational\_unit\_ids | The organizational units the StackSet targets, or null when it targets the root. Pass it to `organizational_unit_ids` of `act_aws_organization_deployment`. |
+| permissions\_hash | SHA-256 over the permission files of this release. |
+| role\_arn | ARN of the role Act assumes in this account. Pass it to `role_arn` of `act_aws_organization_deployment`. |
+| role\_name | Name of the role Act assumes in this account. |
+| root\_id | The root the StackSet targets, or null when it targets organizational units. Pass it to `root_id` of `act_aws_organization_deployment`. |
+| stack\_set\_id | ID of the StackSet that creates the Act role in each member account. |
+| stack\_set\_name | Name of the StackSet that creates the Act role in each member account. |

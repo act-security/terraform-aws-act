@@ -1,19 +1,19 @@
 output "deployment_version" {
   description = "The Act role version these permissions belong to, stamped on the role as the `DeploymentVersion` tag."
-  value       = local.permissions.deployment_version
+  value       = local.manifest.deployment_version
 }
 
 output "permissions_hash" {
-  description = "SHA-256 of the permission set."
-  value       = filesha256(local.permissions_template)
+  description = "SHA-256 over every file in `policies/`."
+  value       = local.permissions_hash
 }
 
 output "managed_policy_arns" {
   description = "AWS managed policies to attach to the role."
-  value       = local.managed_policy_arns
+  value       = [for policy in local.manifest.managed_policies : policy.arn]
 }
 
-output "custom_policies" {
-  description = "Act policy documents to create and attach to the role, by name suffix."
-  value       = local.custom_policies
+output "custom_policy_documents" {
+  description = "Act policy documents to create and attach to the role, as JSON, by name."
+  value       = local.custom_policy_documents
 }

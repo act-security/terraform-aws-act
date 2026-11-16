@@ -1,5 +1,3 @@
-provider "act" {}
-
 provider "aws" {
   region = var.region
 }
@@ -7,5 +5,7 @@ provider "aws" {
 module "act" {
   source = "../.."
 
-  name = var.name
+  role_name         = var.role_name
+  external_id       = var.external_id
+  act_principal_arn = var.act_principal_arn
 }

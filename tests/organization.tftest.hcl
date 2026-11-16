@@ -17,12 +17,6 @@ mock_provider "aws" {
     }
   }
 
-  mock_data "aws_iam_policy_document" {
-    defaults = {
-      json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
-    }
-  }
-
   mock_data "aws_organizations_organization" {
     defaults = {
       id    = "o-abcdefghij"
@@ -31,34 +25,14 @@ mock_provider "aws" {
   }
 }
 
-mock_provider "act" {
-  mock_data "act_current_identity" {
-    defaults = {
-      tenant_id = "8d3c1f0a-2b4e-4c6d-9e8f-0a1b2c3d4e5f"
-    }
-  }
-
-  mock_data "act_aws_onboarding_parameters" {
-    defaults = {
-      deployment_id             = "5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
-      role_name                 = "ActSecurityRole-5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
-      member_role_name          = "ActSecurityRole-5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
-      member_role_path          = "/"
-      act_principal_arn         = "arn:aws:iam::222222222222:role/act-principal"
-      deprecated_principal_arns = []
-      external_id               = "act-external-id"
-      external_id_key_version   = 1
-      deployment_version        = "20261109-4aa4885f"
-      existing_deployment = {
-        id          = "5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
-        status      = "active"
-        created_via = "api"
-      }
-    }
-  }
+variables {
+  deployment_id     = "5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
+  role_name         = "ActSecurityRole-5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
+  external_id       = "act-external-id"
+  act_principal_arn = "arn:aws:iam::222222222222:role/act-principal"
 }
 
-run "covers_the_root_from_the_management_account" {
+run "covers_the_whole_organization_from_the_management_account" {
   command = plan
 
   module {
@@ -66,18 +40,18 @@ run "covers_the_root_from_the_management_account" {
   }
 
   assert {
-    condition     = act_aws_organization_deployment.this.organization_id == "o-abcdefghij"
-    error_message = "The deployment must target the organization the aws provider runs in."
+    condition     = output.organization_id == "o-abcdefghij"
+    error_message = "The organization is the one the aws provider runs in."
   }
 
   assert {
-    condition     = act_aws_organization_deployment.this.root_id == "r-ab12"
+    condition     = output.root_id == "r-ab12"
     error_message = "With no targets the module covers the root."
   }
 
   assert {
-    condition     = act_aws_organization_deployment.this.deletion_protection
-    error_message = "An organization deployment is protected by default."
+    condition     = output.organizational_unit_ids == null
+    error_message = "A root target has no organizational units."
   }
 
   assert {
@@ -86,8 +60,8 @@ run "covers_the_root_from_the_management_account" {
   }
 
   assert {
-    condition     = aws_cloudformation_stack_set.members.call_as == "SELF"
-    error_message = "The management account calls the StackSet as itself."
+    condition     = aws_cloudformation_stack_set.members.permission_model == "SERVICE_MANAGED" && aws_cloudformation_stack_set.members.call_as == "SELF"
+    error_message = "The management account runs a service-managed StackSet as itself."
   }
 
   assert {
@@ -98,6 +72,11 @@ run "covers_the_root_from_the_management_account" {
   assert {
     condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].organizational_unit_ids == toset(["r-ab12"])
     error_message = "The StackSet must target the root."
+  }
+
+  assert {
+    condition     = output.external_id == "act-external-id"
+    error_message = "The external ID is passed through."
   }
 }
 
@@ -125,12 +104,55 @@ run "renders_member_policies_per_account" {
 
   assert {
     condition     = jsondecode(aws_cloudformation_stack_set.members.template_body).Resources.ActSecurityRole.Properties.RoleName == "ActSecurityRole-5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
-    error_message = "Member roles must take the name Act issued."
+    error_message = "Member roles take role_name unless member_role_name is set."
+  }
+
+  assert {
+    condition     = jsondecode(aws_cloudformation_stack_set.members.template_body).Resources.ActSecurityRole.Properties.AssumeRolePolicyDocument.Statement[0].Condition.StringEquals["sts:ExternalId"] == "act-external-id"
+    error_message = "Member roles must require the external ID."
   }
 
   assert {
     condition     = length(aws_cloudformation_stack_set.members.template_body) <= 51200
     error_message = "The member template must fit the CloudFormation template body limit."
+  }
+}
+
+run "covers_organizational_units" {
+  command = plan
+
+  module {
+    source = "./modules/organization"
+  }
+
+  variables {
+    organizational_unit_ids = ["ou-ab12-11111111", "ou-ab12-22222222"]
+    excluded_account_ids    = ["333333333333"]
+  }
+
+  assert {
+    condition     = output.root_id == null
+    error_message = "Organizational units replace the root."
+  }
+
+  assert {
+    condition     = output.organizational_unit_ids == toset(["ou-ab12-11111111", "ou-ab12-22222222"])
+    error_message = "The output names the targeted units."
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].organizational_unit_ids == toset(["ou-ab12-11111111", "ou-ab12-22222222"])
+    error_message = "The StackSet must target the units."
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].account_filter_type == "DIFFERENCE"
+    error_message = "Excluded accounts must be filtered out of the StackSet."
+  }
+
+  assert {
+    condition     = output.excluded_account_ids == toset(["333333333333"])
+    error_message = "Excluded accounts are passed through."
   }
 }
 
@@ -143,33 +165,23 @@ run "skips_the_delegated_admin_account" {
 
   variables {
     call_as                 = "DELEGATED_ADMIN"
-    organizational_unit_ids = ["ou-ab12-11111111", "ou-ab12-22222222"]
+    organizational_unit_ids = ["ou-ab12-11111111"]
     excluded_account_ids    = ["333333333333"]
   }
 
   assert {
-    condition     = aws_cloudformation_stack_set.members.call_as == "DELEGATED_ADMIN"
+    condition     = aws_cloudformation_stack_set.members.call_as == "DELEGATED_ADMIN" && aws_cloudformation_stack_instances.members.call_as == "DELEGATED_ADMIN"
     error_message = "A delegated administrator calls the StackSet as one."
   }
 
   assert {
-    condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].account_filter_type == "DIFFERENCE"
-    error_message = "Excluded accounts must be filtered out of the StackSet."
-  }
-
-  assert {
     condition     = aws_cloudformation_stack_instances.members.deployment_targets[0].accounts == toset(["111111111111", "333333333333"])
-    error_message = "The StackSet must skip excluded accounts and the delegated administrator, whose role this module creates directly."
+    error_message = "The StackSet must skip excluded accounts and the delegated administrator, whose role the module creates directly."
   }
 
   assert {
-    condition     = act_aws_organization_deployment.this.excluded_account_ids == toset(["333333333333"])
+    condition     = output.excluded_account_ids == toset(["333333333333"])
     error_message = "Act keeps scanning the delegated administrator account."
-  }
-
-  assert {
-    condition     = act_aws_organization_deployment.this.root_id == null
-    error_message = "Organizational units replace the root."
   }
 }
 
@@ -185,7 +197,7 @@ run "refuses_root_and_units_together" {
     organizational_unit_ids = ["ou-ab12-11111111"]
   }
 
-  expect_failures = [data.act_aws_onboarding_parameters.this]
+  expect_failures = [aws_cloudformation_stack_set.members]
 }
 
 run "needs_targets_where_roots_are_hidden" {
@@ -207,5 +219,5 @@ run "needs_targets_where_roots_are_hidden" {
     call_as = "DELEGATED_ADMIN"
   }
 
-  expect_failures = [data.act_aws_onboarding_parameters.this]
+  expect_failures = [aws_cloudformation_stack_set.members]
 }

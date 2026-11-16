@@ -1,9 +1,9 @@
-output "deployment_id" {
-  description = "The Act deployment ID."
-  value       = module.act.deployment_id
+output "role_arn" {
+  description = "Pass to `role_arn` of `act_aws_account_deployment`."
+  value       = module.act.role_arn
 }
 
-output "console_url" {
-  description = "The deployment's page in the Act console."
-  value       = module.act.console_url
+output "account_id" {
+  description = "Pass to `account_id` of `act_aws_account_deployment`."
+  value       = module.act.account_id
 }

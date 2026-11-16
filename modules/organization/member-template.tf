@@ -2,23 +2,23 @@ locals {
   member_role_resource = "ActSecurityRole"
 
   member_policy_resources = {
-    for name, document in module.member_permissions.custom_policies : "ActSecurity${name}" => {
+    for name, document in module.member_permissions.custom_policy_documents : "ActSecurity${name}" => {
       Type = "AWS::IAM::ManagedPolicy"
       Properties = {
-        ManagedPolicyName = "${data.act_aws_onboarding_parameters.this.member_role_name}-${name}"
+        ManagedPolicyName = "${local.member_role_name}-${name}"
         Description       = "Act read permissions: ${name}"
-        PolicyDocument    = { "Fn::Sub" = jsonencode(document) }
+        PolicyDocument    = { "Fn::Sub" = document }
       }
     }
   }
 
   member_role_properties = {
-    RoleName                 = data.act_aws_onboarding_parameters.this.member_role_name
-    Path                     = data.act_aws_onboarding_parameters.this.member_role_path
+    RoleName                 = local.member_role_name
+    Path                     = var.member_role_path
     Description              = "Read-only role Act assumes with an external ID"
-    AssumeRolePolicyDocument = jsondecode(module.role.assume_role_policy)
+    AssumeRolePolicyDocument = jsondecode(module.role.trust_policy)
     ManagedPolicyArns = concat(
-      [for arn in module.member_permissions.managed_policy_arns : { "Fn::Sub" = arn }],
+      module.member_permissions.managed_policy_arns,
       [for resource in keys(local.member_policy_resources) : { Ref = resource }],
     )
     Tags = [

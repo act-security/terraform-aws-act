@@ -1,110 +1,126 @@
 # Act module for AWS
 
-Connects an AWS account or organization to [Act](https://act.security) in one apply. The module reads the onboarding values Act issues for the target, creates the read-only IAM role Act assumes with them, and registers the deployment through the [Act provider](https://registry.terraform.io/providers/act-security/act/latest). Nothing is copied from the Act console.
+Creates the AWS resources [Act](https://act.security) needs to read an AWS account or organization: a read-only IAM role that trusts Act with an external ID, and for an organization, a service-managed StackSet that creates the same role in every member account. The module uses only the `aws` provider and creates nothing in Act.
 
-| Path | Use it for |
-|---|---|
-| `act-security/act/aws` | One AWS account: the account the `aws` provider runs in |
-| `act-security/act/aws//modules/organization` | An AWS organization, from the management account or a CloudFormation StackSets delegated administrator |
-| `act-security/act/aws//modules/account-role` | Only the IAM role, for pipelines that create roles separately from the Act deployment |
+Its inputs are the onboarding values Act issues for the target (role name, external ID, Act principal and, for an organization, the deployment ID). Its outputs are what you register with Act afterwards: the role ARN, the account or organization, the StackSet and its targets.
+
+| Target | Module | Where you run it |
+| ------ | ------ | ---------------- |
+| One account | `act-security/act/aws` | The account |
+| A whole organization | `act-security/act/aws//modules/organization` | The management account, or a StackSets delegated administrator with `root_id` |
+| Some organizational units | `act-security/act/aws//modules/organization` with `organizational_unit_ids` | The management account or a StackSets delegated administrator |
 
 ## Usage
 
+One account:
+
 ```hcl
-provider "act" {}
-
-provider "aws" {
-  region = "us-east-1"
-}
-
 module "act" {
   source  = "act-security/act/aws"
   version = "~> 0.1"
 
-  name = "payments-prod"
+  role_name         = "ActSecurityRole-5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
+  external_id       = "8c0f4b6e-2d1a-4f3c-9b7e-6a5d4c3b2a10"
+  act_principal_arn = "arn:aws:iam::222222222222:role/act-principal"
 }
 ```
 
-Set `ACT_CLIENT_ID` and `ACT_CLIENT_SECRET` to an Act API key with write access, then run `terraform apply`. Act verifies the role before it stores the deployment, so a broken role fails the apply and leaves nothing behind.
-
-For an organization, run the `organization` submodule in the management account. It creates the Act role there, a service-managed StackSet that creates the role in every member account, and the organization deployment:
+A whole organization, from the management account:
 
 ```hcl
 module "act" {
   source  = "act-security/act/aws//modules/organization"
   version = "~> 0.1"
 
-  name                 = "acme-org"
-  excluded_account_ids = ["222222222222"]
+  deployment_id     = "5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
+  role_name         = "ActSecurityRole-5a7e2c1d-3b4f-4a6e-8c9d-0e1f2a3b4c5d"
+  external_id       = "8c0f4b6e-2d1a-4f3c-9b7e-6a5d4c3b2a10"
+  act_principal_arn = "arn:aws:iam::222222222222:role/act-principal"
 }
 ```
 
-From a StackSets delegated administrator, set `call_as = "DELEGATED_ADMIN"` and the root or organizational units to cover. See [`examples/`](examples) for complete configurations.
+Set `organizational_unit_ids` to cover some units instead of the root, and `call_as = "DELEGATED_ADMIN"` to run from a StackSets delegated administrator. See [`examples/`](examples) for each target.
 
-## Permissions
-
-Every permission the role gets ships inside the module release: `SecurityAudit`, `ViewOnlyAccess`, and Act's own read policies in [`modules/permissions/permissions.yaml.tftpl`](modules/permissions/permissions.yaml.tftpl). The Act API supplies only the role name, the Act principal and the external ID, so a module version always grants the same permissions. EKS cluster access is on, as in the Act console onboarding; set `enable_eks_cluster_access = false` to leave it out.
-
-The role carries a `DeploymentVersion` tag. When Act recommends a newer role version, the `act_module_current` check warns at plan and the `update_available` output turns true. Upgrade the module to grant the permissions Act expects.
+EKS cluster access is on, as in the Act console onboarding. Set `enable_eks_cluster_access = false` to leave it out.
 
 ## Compatibility
 
-Terraform 1.5.7 or later, the Act provider 0.3.0 or later, and the AWS provider 5.0 or later (6.0 or later for the `organization` submodule). The tests in `tests/` use mock providers and need Terraform 1.7 or later.
+Terraform 1.5.7 or later and the AWS provider 5.0 or later, 6.0 or later for the `organization` submodule. The tests in `tests/` use a mock provider and need Terraform 1.7 or later.
+
+## Permissions
+
+The role gets these permissions and nothing else: exactly what Act requests when you connect AWS from the Act console. The files in [`policies/`](policies) are the only source; the module and this section are built from them, and CI fails when this section drifts from them. Member roles in an organization get the same set. The role carries the tag `DeploymentVersion = 20261109-4aa4885f`.
+
+### AWS managed policies
+
+| Policy | Why |
+| ------ | --- |
+| [`SecurityAudit`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/SecurityAudit.html) `arn:aws:iam::aws:policy/SecurityAudit` | Reads the security configuration of every AWS service: IAM, network, encryption and logging settings. |
+| [`ViewOnlyAccess`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/ViewOnlyAccess.html) `arn:aws:iam::aws:policy/job-function/ViewOnlyAccess` | Lists and describes resources across AWS services, so Act can inventory what exists. |
+
+### Act policies
+
+Each file is an IAM policy document. `${account_id}`, `${partition}`, `${role_name}` and `${cloudtrail_bucket_name}` are filled in for the account the role is in.
+
+| Policy | File | Attached | Statements | Services |
+| ------ | ---- | -------- | ---------- | -------- |
+| `CustomPolicy1` | [`policies/custom-policy-1.json`](policies/custom-policy-1.json) | Always | 14 | `bedrock`, `dynamodb`, `eks`, `kafka`, `kafka-cluster`, `kinesis`, `kms`, `lambda`, `logs`, `organizations`, `s3`, `s3express`, `ssm` |
+| `CustomPolicy2` | [`policies/custom-policy-2.json`](policies/custom-policy-2.json) | Always | 11 | `aoss`, `apigateway`, `bedrock-agentcore`, `cloudformation`, `cloudhsm`, `cloudtrail`, `iot`, `s3`, `sagemaker`, `signin` |
+| `EksClusterAccess` | [`policies/eks-cluster-access.json`](policies/eks-cluster-access.json) | When `enable_eks_cluster_access` is true (the default) | 5 | `eks` |
 
 ## Requirements
 
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.5.7 |
-| act | >= 0.3.0 |
 | aws | >= 5.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| act | >= 0.3.0 |
 | aws | >= 5.0 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| role | ./modules/account-role | n/a |
+| permissions | ./modules/permissions | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
-| [act_aws_account_deployment.this](https://registry.terraform.io/providers/act-security/act/latest/docs/resources/aws_account_deployment) | resource |
-| [act_aws_onboarding_parameters.this](https://registry.terraform.io/providers/act-security/act/latest/docs/data-sources/aws_onboarding_parameters) | data source |
-| [act_current_identity.current](https://registry.terraform.io/providers/act-security/act/latest/docs/data-sources/current_identity) | data source |
+| [aws_iam_policy.custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.act](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.managed](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| act\_tags | Act tags for the deployment, at most 50. They are not AWS tags. | `map(string)` | `null` | no |
-| allowed\_regions | The AWS regions Act scans, such as `us-east-1`. Null scans every region. | `set(string)` | `null` | no |
+| act\_principal\_arn | The Act principal the role trusts, `act_principal_arn` from the Act onboarding values. | `string` | n/a | yes |
+| external\_id | The external ID the role's trust policy requires, `external_id` from the Act onboarding values. Not a secret. | `string` | n/a | yes |
+| role\_name | Name of the IAM role, `role_name` from the Act onboarding values. | `string` | n/a | yes |
 | cloudtrail\_bucket\_name | The S3 bucket CloudTrail writes to. Limits Act's log reads to that bucket. `*` reads `AWSLogs/` in any bucket. | `string` | `"*"` | no |
-| deletion\_protection | When true, Act refuses to delete the deployment and a plan that destroys it fails. | `bool` | `false` | no |
-| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for its role so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
-| expected\_tenant\_id | The Act tenant this configuration must run as. The plan fails when the act provider is authenticated to another tenant. | `string` | `null` | no |
-| name | The name Act shows for the deployment, 1 to 64 characters. Act picks one when it is null. | `string` | `null` | no |
-| permissions\_boundary\_arn | ARN of a permissions boundary to attach to the Act role. | `string` | `null` | no |
-| tags | AWS tags for the IAM role and policies. | `map(string)` | `{}` | no |
+| deprecated\_principal\_arns | Act principals being retired that the role keeps trusting during a rotation, `deprecated_principal_arns` from the Act onboarding values. | `list(string)` | `[]` | no |
+| enable\_eks\_cluster\_access | Let Act create a view-only EKS access entry for the role so it can scan Kubernetes inside EKS clusters. | `bool` | `true` | no |
+| permissions\_boundary\_arn | ARN of a permissions boundary to attach to the role. | `string` | `null` | no |
+| tags | AWS tags for the role and its policies. | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
-| console\_url | The deployment's page in the Act console. |
-| deployment\_id | The Act deployment ID. |
-| deployment\_version | The Act role version this module release deploys. |
-| external\_id | The external ID the role's trust policy requires. Not a secret. |
-| permissions\_hash | SHA-256 of the permissions this module release grants. |
-| role\_arn | ARN of the role Act assumes. |
+| account\_id | The AWS account the role is in. Pass it to `account_id` of `act_aws_account_deployment`. |
+| custom\_policy\_documents | Act policy documents attached to the role, as JSON, by name. |
+| deployment\_version | The Act role version this release deploys, stamped on the role as the `DeploymentVersion` tag. |
+| external\_id | The external ID the role's trust policy requires, passed through. Not a secret. |
+| managed\_policy\_arns | AWS managed policies attached to the role. |
+| permissions\_hash | SHA-256 over the permission files of this release. |
+| role\_arn | ARN of the role Act assumes. Pass it to `role_arn` of `act_aws_account_deployment`. |
 | role\_name | Name of the role Act assumes. |
-| status | `active` when Act can use the role, `failed` when it cannot. |
-| update\_available | True when Act recommends a newer role version than the one deployed. |
+| trust\_policy | The role's trust policy as JSON. |

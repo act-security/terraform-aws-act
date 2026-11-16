@@ -4,8 +4,27 @@ variable "region" {
   default     = "us-east-1"
 }
 
-variable "name" {
-  description = "The name Act shows for the deployment."
+variable "role_name" {
+  description = "`role_name` from the Act onboarding values."
   type        = string
-  default     = "acme-org"
+}
+
+variable "external_id" {
+  description = "`external_id` from the Act onboarding values."
+  type        = string
+}
+
+variable "act_principal_arn" {
+  description = "`act_principal_arn` from the Act onboarding values."
+  type        = string
+}
+
+variable "deployment_id" {
+  description = "`deployment_id` from the Act onboarding values."
+  type        = string
+}
+
+variable "organizational_unit_ids" {
+  description = "The organizational units to cover. A delegated administrator cannot list the organization roots."
+  type        = set(string)
 }

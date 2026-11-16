@@ -1,0 +1,79 @@
+{
+  "Statement": [
+    {
+      "Action": "eks:AccessKubernetesApi",
+      "Effect": "Allow",
+      "Resource": "arn:aws:eks:*:${account_id}:cluster/*",
+      "Sid": "ActSecurityEKSAccessKubernetesApi"
+    },
+    {
+      "Action": "eks:CreateAccessEntry",
+      "Condition": {
+        "ArnEquals": {
+          "eks:principalArn": "arn:aws:iam::${account_id}:role/${role_name}"
+        },
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "CreatedBy"
+          ]
+        },
+        "Null": {
+          "eks:kubernetesGroups": "true",
+          "eks:username": "true"
+        },
+        "StringEquals": {
+          "aws:RequestTag/CreatedBy": "ActSecurity"
+        },
+        "StringEqualsIfExists": {
+          "eks:accessEntryType": "STANDARD"
+        }
+      },
+      "Effect": "Allow",
+      "Resource": "arn:aws:eks:*:${account_id}:cluster/*",
+      "Sid": "ActSecurityEKSCreateAccessEntry"
+    },
+    {
+      "Action": "eks:DeleteAccessEntry",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/CreatedBy": "ActSecurity"
+        }
+      },
+      "Effect": "Allow",
+      "Resource": "arn:aws:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*",
+      "Sid": "ActSecurityEKSDeleteAccessEntry"
+    },
+    {
+      "Action": "eks:TagResource",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "CreatedBy"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/CreatedBy": "ActSecurity"
+        }
+      },
+      "Effect": "Allow",
+      "Resource": "arn:aws:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*",
+      "Sid": "ActSecurityEKSTagAccessEntry"
+    },
+    {
+      "Action": "eks:AssociateAccessPolicy",
+      "Condition": {
+        "ArnEquals": {
+          "eks:policyArn": "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy",
+          "eks:principalArn": "arn:aws:iam::${account_id}:role/${role_name}"
+        },
+        "StringEquals": {
+          "eks:accessScope": "cluster"
+        }
+      },
+      "Effect": "Allow",
+      "Resource": "arn:aws:eks:*:${account_id}:access-entry/*/role/${account_id}/${role_name}/*",
+      "Sid": "ActSecurityEKSAssociateViewPolicy"
+    }
+  ],
+  "Version": "2012-10-17"
+}

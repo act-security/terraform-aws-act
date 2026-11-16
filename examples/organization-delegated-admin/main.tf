@@ -1,5 +1,3 @@
-provider "act" {}
-
 provider "aws" {
   region = var.region
 }
@@ -7,7 +5,10 @@ provider "aws" {
 module "act" {
   source = "../../modules/organization"
 
-  name                    = var.name
+  deployment_id           = var.deployment_id
+  role_name               = var.role_name
+  external_id             = var.external_id
+  act_principal_arn       = var.act_principal_arn
   call_as                 = "DELEGATED_ADMIN"
-  organizational_unit_ids = ["ou-ab12-11111111", "ou-ab12-22222222"]
+  organizational_unit_ids = var.organizational_unit_ids
 }
