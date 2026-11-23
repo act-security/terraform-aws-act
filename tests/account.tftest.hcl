@@ -27,7 +27,7 @@ run "creates_the_role_with_todays_permissions" {
   }
 
   assert {
-    condition     = aws_iam_role.act.tags["DeploymentVersion"] == "20261116-28c5963b"
+    condition     = aws_iam_role.act.tags["DeploymentVersion"] == "20261123-4ad80fa5"
     error_message = "The role must carry the DeploymentVersion tag Act reads."
   }
 

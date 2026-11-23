@@ -84,6 +84,21 @@
       "Effect": "Allow",
       "Resource": "*",
       "Sid": "ActSecurityKafkaAccess"
+    },
+    {
+      "Action": [
+        "apigateway:GET"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:apigateway:*::/restapis/*",
+        "arn:aws:apigateway:*::/apis/*",
+        "arn:aws:apigateway:*::/vpclinks/*",
+        "arn:aws:apigateway:*::/account",
+        "arn:aws:apigateway:*::/usageplans",
+        "arn:aws:apigateway:*:*:/domainnameaccessassociations"
+      ],
+      "Sid": "ActSecurityAPIGatewayAccess"
     }
   ],
   "Version": "2012-10-17"

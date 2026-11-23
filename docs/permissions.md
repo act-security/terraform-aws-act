@@ -1,6 +1,6 @@
 ## Permissions
 
-The role gets these permissions and nothing else: exactly what Act requests when you connect AWS from the Act console. The files in [`policies/`](policies) are the only source; the module and this section are built from them, and CI fails when this section drifts from them. Member roles in an organization get the same set. The role carries the tag `DeploymentVersion = 20261116-28c5963b`.
+The role gets these permissions and nothing else: exactly what Act requests when you connect AWS from the Act console. The files in [`policies/`](policies) are the only source; the module and this section are built from them, and CI fails when this section drifts from them. Member roles in an organization get the same set. The role carries the tag `DeploymentVersion = 20261123-4ad80fa5`.
 
 ### AWS managed policies
 
@@ -15,8 +15,8 @@ Every role gets these. Each file is an IAM policy document; `${account_id}`, `${
 
 | Policy | File | Statements | Services |
 | ------ | ---- | ---------- | -------- |
-| `CustomPolicy1` | [`policies/custom-policy-1.json`](policies/custom-policy-1.json) | 8 | `dynamodb`, `eks`, `kafka`, `kafka-cluster`, `kinesis`, `lambda`, `organizations`, `s3express`, `ssm` |
-| `CustomPolicy2` | [`policies/custom-policy-2.json`](policies/custom-policy-2.json) | 8 | `apigateway`, `cloudformation`, `cloudhsm`, `cloudtrail`, `iot`, `s3`, `signin` |
+| `CustomPolicy1` | [`policies/custom-policy-1.json`](policies/custom-policy-1.json) | 9 | `apigateway`, `dynamodb`, `eks`, `kafka`, `kafka-cluster`, `kinesis`, `lambda`, `organizations`, `s3express`, `ssm` |
+| `CustomPolicy2` | [`policies/custom-policy-2.json`](policies/custom-policy-2.json) | 9 | `cloudformation`, `cloudhsm`, `cloudtrail`, `iot`, `network-firewall`, `networkmanager`, `s3`, `signin` |
 
 ### Permission groups
 

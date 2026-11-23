@@ -1,5 +1,5 @@
 {
-  "deployment_version": "20261116-28c5963b",
+  "deployment_version": "20261123-4ad80fa5",
   "managed_policies": [
     {
       "arn": "arn:aws:iam::aws:policy/SecurityAudit",

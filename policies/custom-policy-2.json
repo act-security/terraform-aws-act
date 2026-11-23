@@ -2,21 +2,6 @@
   "Statement": [
     {
       "Action": [
-        "apigateway:GET"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "arn:aws:apigateway:*::/restapis/*",
-        "arn:aws:apigateway:*::/apis/*",
-        "arn:aws:apigateway:*::/vpclinks/*",
-        "arn:aws:apigateway:*::/account",
-        "arn:aws:apigateway:*::/usageplans",
-        "arn:aws:apigateway:*:*:/domainnameaccessassociations"
-      ],
-      "Sid": "ActSecurityAPIGatewayAccess"
-    },
-    {
-      "Action": [
         "s3:GetAccessGrantsInstance",
         "s3:ListAccessGrantsLocations",
         "s3:ListTagsForResource"
@@ -84,6 +69,32 @@
       "Effect": "Allow",
       "Resource": "*",
       "Sid": "ActSecurityCloudFormationRead"
+    },
+    {
+      "Action": [
+        "networkmanager:ListCoreNetworks",
+        "networkmanager:GetCoreNetwork",
+        "networkmanager:GetCoreNetworkPolicy",
+        "networkmanager:ListAttachments",
+        "networkmanager:GetVpcAttachment",
+        "networkmanager:GetConnectAttachment",
+        "networkmanager:ListPeerings",
+        "networkmanager:GetResourcePolicy"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityCloudWanRead"
+    },
+    {
+      "Action": [
+        "network-firewall:ListTLSInspectionConfigurations",
+        "network-firewall:DescribeTLSInspectionConfiguration",
+        "network-firewall:ListVpcEndpointAssociations",
+        "network-firewall:DescribeVpcEndpointAssociation"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "ActSecurityNetworkFirewallTlsAndEndpointAssociationRead"
     }
   ],
   "Version": "2012-10-17"
